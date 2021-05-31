@@ -1,0 +1,12 @@
+name: dqn38
+channels:
+    - defaults
+dependencies:
+    - python=3.8
+    - pip=21.0.1
+    - pip:
+        - azureml-sdk==1.29.0
+        - pylint==2.8.2
+        - -r file:requirements.txt
+        - -e ./src
+        

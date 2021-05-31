@@ -1,0 +1,7 @@
+--find-links https://download.pytorch.org/whl/torch_stable.html
+torch==1.8.1+cpu
+torchvision==0.9.1+cpu
+torchaudio==0.8.1
+
+numpy==1.20.3
+opencv-python==4.5.2.52
