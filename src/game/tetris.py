@@ -527,14 +527,6 @@ class block:
                 virtual_state[tmpy - 1 : tmpy + 2, tmpx - 1] = value_to_set
                 virtual_state[tmpy + 1, tmpx] = value_to_set
 
-        # 方块越界、游戏结束
-        # if np.any(virtual_state[0, :] > 0):
-        #    print("Game End", virtual_state.shape)
-        # dbgimg = create_image_from_state(virtual_state)
-        # dbgimg = cv2.cvtColor(dbgimg, cv2.COLOR_BGR2RGB)
-        # cv2.imshow("debug", dbgimg)
-        # return None
-
         res_board = virtual_state
         res_board[1:, :] = board_state + virtual_state[1:, :]
 
