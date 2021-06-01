@@ -1,6 +1,6 @@
 import numpy as np
-import confs
-from game.tetromino import Block_Type
+import game.confs as confs
+from game.confs import Block_Type
 
 
 def get_calc_state(block_type: Block_Type, tmpx: int, tmpy: int, tmprotate: int):
