@@ -47,21 +47,7 @@ class tetromino:
         pass
 
     def move_left_on_board(self, board_state: np.ndarray):
-        tmpstate = get_calc_state(
-            self.type, self.center_point[1] - 1, self.center_point[0], self.rotate
-        )
-        if np.any(tmpstate[:, 0:2] == confs.init_value):
-            # print("已经到达左边边界，无法继续往左移动")
-            return False
-        tmpboard = (
-            board_state + tmpstate[1 : confs.row_count + 1, 2 : confs.col_count + 2]
-        )
-        if np.any(tmpboard == confs.init_value + confs.solid_value):
-            # print("左边被方块挡住了，没法往左移动")
-            return False
-
-        self.center_point = (self.center_point[0], self.center_point[1] - 1)
-        return True
+        pass
 
     def move_right_on_board(self, board_state: np.ndarray):
         pass
@@ -79,7 +65,7 @@ class tetromino:
         """
         判断当前的俄罗斯方块在game board上是否能够往左边移动
         1. 假如此方块已经在game board的左边，继续往左移动则会越界
-        2. 加入此方块不在game board的左边，但左边有障碍物，继续移动会发生覆盖
+        2. 假如此方块不在game board的左边，但左边有障碍物，继续移动会发生覆盖
 
         Args:
             board_state (np.ndarray): [description]
@@ -105,9 +91,9 @@ class tetromino:
 
     def can_move_right_on_board(self, board_state: np.ndarray):
         """
-        判断当前的俄罗斯方块在game board上是否能够往左边移动
-        1. 假如此方块已经在game board的左边，继续往左移动则会越界
-        2. 加入此方块不在game board的左边，但左边有障碍物，继续移动会发生覆盖
+        判断当前的俄罗斯方块在game board上是否能够往右边移动
+        1. 假如此方块已经在game board的右边，继续往右移动则会越界
+        2. 假如此方块不在game board的右边，但右边有障碍物，继续移动会发生覆盖
 
         Args:
             board_state (np.ndarray): [description]
@@ -115,23 +101,23 @@ class tetromino:
         Returns:
             [type]: [description]
         """
+        tmppoint = (self.center_point[0], self.center_point[1] + 1)
         calc_state = get_calc_state(
             self.type, self.center_point[1] + 1, self.center_point[0], self.rotate
         )
         # 判断右边是否越界
         if np.any(calc_state[:, -2:-1] == confs.init_value):
             # print("右边越界")
-            return False, calc_state
+            return False, tmppoint, calc_state
         imaginary_board_state = (
             board_state + calc_state[1 : confs.row_count + 1, 2 : confs.col_count + 2]
         )
         # 判断右边是否有障碍物
         if np.any(imaginary_board_state == confs.init_value + confs.solid_value):
             # print("右边有障碍物")
-            return False, imaginary_board_state
+            return False, tmppoint, imaginary_board_state
 
-        self.center_point = (self.center_point[0], self.center_point[1] + 1)
-        return True, imaginary_board_state
+        return True, tmppoint, imaginary_board_state
 
     def can_move_down_on_board(self, board_state: np.ndarray):
         pass
@@ -140,6 +126,18 @@ class tetromino:
         pass
 
     def can_rotate_on_board(self, board_state: np.ndarray):
+        """
+        判断当前的俄罗斯方块在game board上是否能旋转
+        1. 假如此方块是正方块，则返回False
+        2. 假如此方块旋转后，左边越界、右边越界、底部越界，则返回False
+        3. 假如此方块旋转后，和别的重合，则返回False
+
+        Args:
+            board_state (np.ndarray): [description]
+
+        Returns:
+            [type]: [description]
+        """
         tmprotate = self.rotate
         # 一字形、z形、反z形的旋转
         if (
@@ -153,8 +151,7 @@ class tetromino:
                 tmprotate = 0
         # 正方块的旋转，总是返回False
         if self.type == Block_Type.O:
-            tmprotate = 0
-            return False, tmprotate
+            return False, tmprotate, None
         # 山形、L形、反L形的旋转
         if (
             self.type == Block_Type.T
@@ -175,18 +172,18 @@ class tetromino:
         )
         if np.any(calc_state[:, 0:2] == confs.init_value):
             # print("旋转失败，左边越界")
-            return False, tmprotate
+            return False, tmprotate, calc_state
         if np.any(calc_state[:, -2:-1] == confs.init_value):
             # print("旋转失败，右边越界")
-            return False, tmprotate
+            return False, tmprotate, calc_state
         if np.any(calc_state[confs.row_count + 1 :, :] == confs.init_value):
             # print("旋转失败，底部越界")
-            return False, tmprotate
+            return False, tmprotate, calc_state
         imaginary_board_state = (
             board_state + calc_state[1 : confs.row_count + 1, 2 : confs.col_count + 2]
         )
         if np.any(imaginary_board_state == confs.init_value + confs.solid_value):
             # print("旋转失败，和别的方块重合")
-            return False, tmprotate
+            return False, tmprotate, imaginary_board_state
 
-        return True, tmprotate
+        return True, tmprotate, imaginary_board_state
