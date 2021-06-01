@@ -33,20 +33,34 @@ class tetromino:
             self.center_point = (0, 5)
 
     def draw(self, board_state: np.ndarray):
-        pass
+        calc_state = get_calc_state(
+            self.type, self.center_point[1], self.center_point[0], self.rotate
+        )
+        imaginary_game_state = (
+            board_state
+            + calc_state[1 : Confs.row_count.value + 1, 2 : Confs.col_count.value + 2]
+        )
+        return imaginary_game_state
 
     def move_left(self, board_state: np.ndarray):
-        is_movable, new_center_point, imaginary_board_state = self.can_move_left(
+        is_movable, new_center_point, imaginary_game_state = self.can_move_left(
             board_state
         )
         if is_movable:
             self.center_point = new_center_point
-            return imaginary_board_state
+            return imaginary_game_state, 1.0, False, None
         else:
-            return None
+            return self.draw(board_state), 0.0, False, imaginary_game_state
 
     def move_right(self, board_state: np.ndarray):
-        pass
+        is_movable, new_center_point, imaginary_game_state = self.can_move_right(
+            board_state
+        )
+        if is_movable:
+            self.center_point = new_center_point
+            return imaginary_game_state, 1.0, False, None
+        else:
+            return self.draw(board_state), 0.0, False, imaginary_game_state
 
     def move_down(self, board_state: np.ndarray):
         calc_state = get_calc_state(
@@ -56,22 +70,22 @@ class tetromino:
         if np.any(calc_state[Confs.row_count.value + 1 :, :] == Confs.init_value.value):
             self.is_active = False
             # print("俄罗斯方块死亡 : 到达了底部后又继续向下移动")
-            return True
+            return True, None
 
-        imaginary_board_state = (
+        imaginary_game_state = (
             board_state
             + calc_state[1 : Confs.row_count.value + 1, 2 : Confs.col_count.value + 2]
         )
         # 往下移动的时候，被别的方块挡住了，这个方块死掉，生成一个新的方块
         if np.any(
-            imaginary_board_state == Confs.init_value.value + Confs.solid_value.value
+            imaginary_game_state == Confs.init_value.value + Confs.solid_value.value
         ):
             self.is_active = False
             # print("俄罗斯方块死亡 : 被别的方块挡住又继续向下移动")
-            return True
+            return True, None
 
         self.center_point = (self.center_point[0] + 1, self.center_point[1])
-        return False
+        return False, imaginary_game_state
 
     def move_bottom(self, board_state: np.ndarray):
         pass
@@ -99,17 +113,17 @@ class tetromino:
         if np.any(calc_state[:, 0:2] == Confs.init_value.value):
             # print("左边越界")
             return False, tmppoint, calc_state
-        imaginary_board_state = (
+        imaginary_game_state = (
             board_state
             + calc_state[1 : Confs.row_count.value + 1, 2 : Confs.col_count.value + 2]
         )
         # 判断左边是否有障碍物
         if np.any(
-            imaginary_board_state == Confs.init_value.value + Confs.solid_value.value
+            imaginary_game_state == Confs.init_value.value + Confs.solid_value.value
         ):
             # print("左边有障碍物")
-            return False, tmppoint, imaginary_board_state
-        return True, tmppoint, imaginary_board_state
+            return False, tmppoint, imaginary_game_state
+        return True, tmppoint, imaginary_game_state
 
     def can_move_right(self, board_state: np.ndarray):
         """
@@ -131,18 +145,18 @@ class tetromino:
         if np.any(calc_state[:, -2:-1] == Confs.init_value.value):
             # print("右边越界")
             return False, tmppoint, calc_state
-        imaginary_board_state = (
+        imaginary_game_state = (
             board_state
             + calc_state[1 : Confs.row_count.value + 1, 2 : Confs.col_count.value + 2]
         )
         # 判断右边是否有障碍物
         if np.any(
-            imaginary_board_state == Confs.init_value.value + Confs.solid_value.value
+            imaginary_game_state == Confs.init_value.value + Confs.solid_value.value
         ):
             # print("右边有障碍物")
-            return False, tmppoint, imaginary_board_state
+            return False, tmppoint, imaginary_game_state
 
-        return True, tmppoint, imaginary_board_state
+        return True, tmppoint, imaginary_game_state
 
     def can_move_down(self, board_state: np.ndarray):
         pass
