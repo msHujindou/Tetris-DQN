@@ -104,16 +104,17 @@ class tetris_engine:
         # 先消除行、再检查是否有越界的
         if np.any(cp_dst[0, :] > 0):
             game_stop_flag = True
-            print("#### 消除可以消除的行之后，仍然有越界的方块 ####")
-            print("#### Before ####")
-            print(res_board)
-            print("#### After ####")
-            print(cp_dst)
+            if clear_line_count > 0:
+                print("#### 消除可以消除的行之后，仍然有越界的方块 ####")
+                print("#### Before ####")
+                print(res_board)
+                print("#### After ####")
+                print(cp_dst)
             return (
                 game_stop_flag,
                 clear_line_count,
+                cp_dst[1:, :],
                 cp_dst,
-                res_board,
             )
 
         tmp_block = self.create_new_block()
@@ -128,8 +129,8 @@ class tetris_engine:
             return (
                 game_stop_flag,
                 clear_line_count,
+                cp_dst[1:, :],
                 tmp_game_state,
-                None,
             )
 
         self.board_state = np.copy(cp_dst[1:, :])
@@ -179,4 +180,28 @@ class tetris_engine:
                     False,
                     None,
                 )
+        elif action == Action_Type.Bottom:
+            # 能向下移动的最大步数不会超过board_state的行数
+            for step in range(Confs.row_count.value):
+                is_dead, new_game_state = self.tetromino_block.move_down(
+                    self.board_state
+                )
+                if is_dead:
+                    (
+                        is_end,
+                        cleared_lines,
+                        game_state,
+                        debug,
+                    ) = self.proc_when_block_dead(self.board_state)
+                    return (
+                        game_state,
+                        cleared_lines * Confs.each_line_reward.value,
+                        is_end,
+                        debug,
+                    )
+            else:
+                print("#### steps", step + 1)
+                print("####", self.tetromino_block.type)
+                print("####", self.board_state)
+                raise Exception(f"implementation error for action [{action}]")
         raise Exception(f"no implementation for action [{action}]")
