@@ -48,9 +48,19 @@ class tetromino:
         )
         if is_movable:
             self.center_point = new_center_point
-            return imaginary_game_state, 1.0, False, None
+            return (
+                imaginary_game_state,
+                Confs.move_left_no_line_cleared_reward.value,
+                False,
+                None,
+            )
         else:
-            return self.draw(board_state), 0.0, False, imaginary_game_state
+            return (
+                self.draw(board_state),
+                Confs.operation_not_allowed_reward.value,
+                False,
+                imaginary_game_state,
+            )
 
     def move_right(self, board_state: np.ndarray):
         is_movable, new_center_point, imaginary_game_state = self.can_move_right(
@@ -58,9 +68,39 @@ class tetromino:
         )
         if is_movable:
             self.center_point = new_center_point
-            return imaginary_game_state, 1.0, False, None
+            return (
+                imaginary_game_state,
+                Confs.move_right_no_line_cleared_reward.value,
+                False,
+                None,
+            )
         else:
-            return self.draw(board_state), 0.0, False, imaginary_game_state
+            return (
+                self.draw(board_state),
+                Confs.operation_not_allowed_reward.value,
+                False,
+                imaginary_game_state,
+            )
+
+    def rotate_on_board(self, board_state: np.ndarray):
+        can_rotate, new_rotate, imaginary_game_state = self.can_rotate_on_board(
+            board_state
+        )
+        if can_rotate:
+            self.rotate = new_rotate
+            return (
+                imaginary_game_state,
+                Confs.rotate_no_line_cleared_reward.value,
+                False,
+                None,
+            )
+        else:
+            return (
+                self.draw(board_state),
+                Confs.operation_not_allowed_reward.value,
+                False,
+                imaginary_game_state,
+            )
 
     def move_down(self, board_state: np.ndarray):
         calc_state = get_calc_state(
@@ -88,9 +128,6 @@ class tetromino:
         return False, imaginary_game_state
 
     def move_bottom(self, board_state: np.ndarray):
-        pass
-
-    def rotate_on_board(self, board_state: np.ndarray):
         pass
 
     def can_move_left(self, board_state: np.ndarray):
@@ -218,14 +255,14 @@ class tetromino:
         if np.any(calc_state[Confs.row_count.value + 1 :, :] == Confs.init_value.value):
             # print("旋转失败，底部越界")
             return False, tmprotate, calc_state
-        imaginary_board_state = (
+        imaginary_game_state = (
             board_state
             + calc_state[1 : Confs.row_count.value + 1, 2 : Confs.col_count.value + 2]
         )
         if np.any(
-            imaginary_board_state == Confs.init_value.value + Confs.solid_value.value
+            imaginary_game_state == Confs.init_value.value + Confs.solid_value.value
         ):
             # print("旋转失败，和别的方块重合")
-            return False, tmprotate, imaginary_board_state
+            return False, tmprotate, imaginary_game_state
 
-        return True, tmprotate, imaginary_board_state
+        return True, tmprotate, imaginary_game_state

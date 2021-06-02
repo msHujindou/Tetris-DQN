@@ -26,7 +26,11 @@ def human_play():
 
         if key == ord("w"):
             # rotate
-            pass
+            game_state, reward, is_end, debug = env.step(Action_Type.Rotate)
+            print(f"reward [{reward}], is_end [{is_end}]")
+            if debug is not None:
+                debug_img = create_image_from_state(debug)
+                debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
         elif key == ord("s"):
             # down
             game_state, reward, is_end, debug = env.step(Action_Type.Down)

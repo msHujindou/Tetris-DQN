@@ -7,9 +7,12 @@ class Confs(Enum):
     init_value = 128
     blank_value = 0
     solid_value = 1
-    operation_fail_reward = 0.0
-    operation_succeed_but_cleared_zero_line_reward = 5.0
-    reward_for_each_cleared_line = 200
+    operation_not_allowed_reward = 0.0
+    move_left_no_line_cleared_reward = 0.0
+    move_right_no_line_cleared_reward = 0.0
+    rotate_no_line_cleared_reward = 0.0
+    move_down_no_line_cleared_reward = 0.0
+    each_line_reward = 200.0
 
 
 class Block_Type(Enum):

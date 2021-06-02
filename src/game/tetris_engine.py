@@ -54,7 +54,20 @@ class tetris_engine:
             self.tetromino_type_list[int(np.random.randint(0, self.max_random_index))]
         )
 
-    def proc_when_block_dead(self, board_state):
+    def proc_when_block_dead(self, board_state: np.ndarray):
+        """
+        当一个俄罗斯方块死亡后的处理函数，此函数的功能如下：
+        1、计算可以消除的行数
+        2、判断消除完行后是否存在顶部越界的情况
+        3、更新board_state
+        4、生成新的俄罗斯方块，并判断新的board_state是否能容纳下新的俄罗斯方块
+        5、无论是顶部越界或者是无法容纳新生成的俄罗斯方块，都返回游戏结束标志
+        Args:
+            board_state ([type]): [description]
+
+        Returns:
+            [type]: [description]
+        """
         virtual_state = get_calc_state(
             self.tetromino_block.type,
             self.tetromino_block.center_point[1],
@@ -130,17 +143,40 @@ class tetris_engine:
         )
 
     def step(self, action: Action_Type):
+        """[summary]
+
+        Args:
+            action (Action_Type): [description]
+
+        Raises:
+            Exception: [description]
+
+        Returns:
+            [type]: [ new_state , reward , is_end , debug_info ]
+        """
         if action == Action_Type.Left:
             return self.tetromino_block.move_left(self.board_state)
         elif action == Action_Type.Right:
             return self.tetromino_block.move_right(self.board_state)
+        elif action == Action_Type.Rotate:
+            return self.tetromino_block.rotate_on_board(self.board_state)
         elif action == Action_Type.Down:
             is_dead, new_game_state = self.tetromino_block.move_down(self.board_state)
             if is_dead:
                 is_end, cleared_lines, game_state, debug = self.proc_when_block_dead(
                     self.board_state
                 )
-                return game_state, cleared_lines * 100, is_end, debug
+                return (
+                    game_state,
+                    cleared_lines * Confs.each_line_reward.value,
+                    is_end,
+                    debug,
+                )
             else:
-                return new_game_state, 1.0, False, None
-        return None, None, None, None
+                return (
+                    new_game_state,
+                    Confs.move_down_no_line_cleared_reward.value,
+                    False,
+                    None,
+                )
+        raise Exception(f"no implementation for action [{action}]")
