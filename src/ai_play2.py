@@ -48,7 +48,7 @@ def ai_play(model_file):
         tensor = tensor.float()
         pred_q = model(tensor)
         # print("##############")
-        print(pred_q)
+        # print(pred_q)
         # print(pred_q.data)
         # print(pred_q.data.max(1))
         # print(pred_q.data.max(1)[1])
@@ -69,6 +69,10 @@ def ai_play(model_file):
         #     print("Model suggest down action")
         # else:
         #     raise Exception("Error prediction")
+
+        print(
+            f"left max step is {env.test_step(Action_Type.Left)} , right max step is {env.test_step(Action_Type.Right)} , down max step is {env.test_step(Action_Type.Down)} , rotate max step is {env.test_step(Action_Type.Rotate)}"
+        )
 
         if key == ord("w"):
             # rotate
