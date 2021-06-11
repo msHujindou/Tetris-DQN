@@ -62,7 +62,7 @@ def train_DQN():
     # 直接掉落到底部，局面很快就终结
     action_space = [0, 1, 2, 3]
 
-    episodes = 10
+    episodes = 10000
 
     model = DQN(row_count, col_count, len(action_space))
     loss_fn = nn.SmoothL1Loss()
@@ -168,10 +168,10 @@ def train_DQN():
                     state_batch_list.append(ts)
                 state_batch = torch.cat(state_batch_list)
 
-                action_batch = torch.Tensor(
+                action_batch = torch.tensor(
                     [[act] for act in batch.action], dtype=torch.int64
                 )
-                reward_batch = torch.Tensor([[rwd] for rwd in batch.reward])
+                reward_batch = torch.tensor([[rwd] for rwd in batch.reward])
                 print(reward_batch, reward_batch[reward_batch > 0])
 
                 # print(action_batch)

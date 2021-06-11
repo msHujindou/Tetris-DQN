@@ -31,14 +31,13 @@ class tetris_engine:
             self.action_type_list.append(Action_Type.Rotate)
             self.action_type_list.append(Action_Type.Down)
         self.action_space = len(self.action_type_list)
-
-        self.board_state = np.zeros(
-            (Confs.row_count.value, Confs.col_count.value), np.ubyte
-        )
         self.max_random_index = len(self.tetromino_type_list)
-        self.tetromino_block = tetromino(
-            self.tetromino_type_list[int(np.random.randint(0, self.max_random_index))]
-        )
+        self.board_state = None
+        self.tetromino_block = None
+
+    def select_random_step(self):
+        action_index = int(np.random.randint(0, self.action_space))
+        return action_index, self.action_type_list[action_index]
 
     def reset(self):
         self.board_state = np.zeros(
@@ -204,4 +203,122 @@ class tetris_engine:
                 print("####", self.tetromino_block.type)
                 print("####", self.board_state)
                 raise Exception(f"implementation error for action [{action}]")
+        elif action == Action_Type.Left_Down:
+            # 向左移动后，并向下移动
+            (
+                is_movable,
+                new_center_point,
+                imaginary_game_state,
+            ) = self.tetromino_block.can_move_left(self.board_state)
+            if is_movable:
+                self.tetromino_block.center_point = new_center_point
+
+                is_dead, new_game_state = self.tetromino_block.move_down(
+                    self.board_state
+                )
+                if is_dead:
+                    (
+                        is_end,
+                        cleared_lines,
+                        game_state,
+                        debug,
+                    ) = self.proc_when_block_dead(self.board_state)
+                    return (
+                        game_state,
+                        cleared_lines * Confs.each_line_reward.value,
+                        is_end,
+                        debug,
+                    )
+                else:
+                    return (
+                        new_game_state,
+                        Confs.move_down_no_line_cleared_reward.value,
+                        False,
+                        None,
+                    )
+            else:
+                return (
+                    self.tetromino_block.draw(self.board_state),
+                    Confs.operation_not_allowed_reward.value,
+                    False,
+                    imaginary_game_state,
+                )
+        elif action == Action_Type.Right_Down:
+            # 向右移动后，并向下移动
+            (
+                is_movable,
+                new_center_point,
+                imaginary_game_state,
+            ) = self.tetromino_block.can_move_right(self.board_state)
+            if is_movable:
+                self.tetromino_block.center_point = new_center_point
+
+                is_dead, new_game_state = self.tetromino_block.move_down(
+                    self.board_state
+                )
+                if is_dead:
+                    (
+                        is_end,
+                        cleared_lines,
+                        game_state,
+                        debug,
+                    ) = self.proc_when_block_dead(self.board_state)
+                    return (
+                        game_state,
+                        cleared_lines * Confs.each_line_reward.value,
+                        is_end,
+                        debug,
+                    )
+                else:
+                    return (
+                        new_game_state,
+                        Confs.move_down_no_line_cleared_reward.value,
+                        False,
+                        None,
+                    )
+            else:
+                return (
+                    self.tetromino_block.draw(self.board_state),
+                    Confs.operation_not_allowed_reward.value,
+                    False,
+                    imaginary_game_state,
+                )
+        elif action == Action_Type.Rotate_Down:
+            (
+                can_rotate,
+                new_rotate,
+                imaginary_game_state,
+            ) = self.tetromino_block.can_rotate_on_board(self.board_state)
+            if can_rotate:
+                self.tetromino_block.rotate = new_rotate
+                is_dead, new_game_state = self.tetromino_block.move_down(
+                    self.board_state
+                )
+                if is_dead:
+                    (
+                        is_end,
+                        cleared_lines,
+                        game_state,
+                        debug,
+                    ) = self.proc_when_block_dead(self.board_state)
+                    return (
+                        game_state,
+                        cleared_lines * Confs.each_line_reward.value,
+                        is_end,
+                        debug,
+                    )
+                else:
+                    return (
+                        new_game_state,
+                        Confs.move_down_no_line_cleared_reward.value,
+                        False,
+                        None,
+                    )
+            else:
+                return (
+                    self.tetromino_block.draw(self.board_state),
+                    Confs.operation_not_allowed_reward.value,
+                    False,
+                    imaginary_game_state,
+                )
         raise Exception(f"no implementation for action [{action}]")
