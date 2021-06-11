@@ -142,6 +142,98 @@ class tetris_engine:
             None,
         )
 
+    def test_step(self, action: Action_Type):
+        """
+        检测CNN是否能识别出活着的俄罗斯方块在任意盘局
+        可以往左走的步数、可以往右走的步数、可以旋转的次数
+        Args:
+            action (Action_Type): [description]
+        """
+        if action == Action_Type.Left:
+            center_point = self.tetromino_block.center_point
+            movable_step = 0
+            while True:
+                (
+                    is_movable,
+                    new_center_point,
+                    imaginary_game_state,
+                ) = self.tetromino_block.can_move_left(self.board_state, center_point)
+                if is_movable:
+                    movable_step += 1
+                    center_point = new_center_point
+                else:
+                    break
+            return movable_step
+        elif action == Action_Type.Right:
+            center_point = self.tetromino_block.center_point
+            movable_step = 0
+            while True:
+                (
+                    is_movable,
+                    new_center_point,
+                    imaginary_game_state,
+                ) = self.tetromino_block.can_move_right(self.board_state, center_point)
+                if is_movable:
+                    movable_step += 1
+                    center_point = new_center_point
+                else:
+                    break
+            return movable_step
+        elif action == Action_Type.Down:
+            center_point = self.tetromino_block.center_point
+            movable_step = 0
+            while True:
+                (
+                    is_movable,
+                    will_dead_if_force_move,
+                    new_center_point,
+                    imaginary_game_state,
+                ) = self.tetromino_block.can_move_down(self.board_state, center_point)
+                if is_movable:
+                    movable_step += 1
+                    center_point = new_center_point
+                else:
+                    break
+            return movable_step
+        elif action == Action_Type.Rotate:
+            if self.tetromino_block.type == Block_Type.O:
+                return 0
+            current_rotate = self.tetromino_block.rotate
+            rotate_step = 0
+            while True:
+                (
+                    is_rotatable,
+                    new_rotate,
+                    imaginary_game_state,
+                ) = self.tetromino_block.can_rotate_on_board(
+                    self.board_state, current_rotate
+                )
+                if is_rotatable:
+                    rotate_step += 1
+                    current_rotate = new_rotate
+                    if rotate_step >= 4:
+                        break
+                else:
+                    break
+            if (
+                self.tetromino_block.type == Block_Type.I
+                or self.tetromino_block.type == Block_Type.Z
+                or self.tetromino_block.type == Block_Type.S
+            ):
+                if rotate_step >= 2:
+                    return 2
+                else:
+                    return rotate_step
+            if (
+                self.tetromino_block.type == Block_Type.T
+                or self.tetromino_block.type == Block_Type.L
+                or self.tetromino_block.type == Block_Type.J
+            ):
+                if rotate_step >= 4:
+                    return 4
+                else:
+                    return rotate_step
+
     def step(self, action: Action_Type):
         """[summary]
 

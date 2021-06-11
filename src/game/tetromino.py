@@ -130,7 +130,7 @@ class tetromino:
     def move_bottom(self, board_state: np.ndarray):
         pass
 
-    def can_move_left(self, board_state: np.ndarray):
+    def can_move_left(self, board_state: np.ndarray, current_point=None):
         """
         判断当前的俄罗斯方块在game board上是否能够往左边移动
         1. 假如此方块已经在game board的左边，继续往左移动则会越界
@@ -142,10 +142,10 @@ class tetromino:
         Returns:
             [type]: [description]
         """
-        tmppoint = (self.center_point[0], self.center_point[1] - 1)
-        calc_state = get_calc_state(
-            self.type, self.center_point[1] - 1, self.center_point[0], self.rotate
-        )
+        if current_point is None:
+            current_point = self.center_point
+        tmppoint = (current_point[0], current_point[1] - 1)
+        calc_state = get_calc_state(self.type, tmppoint[1], tmppoint[0], self.rotate)
         # 判断左边是否越界
         if np.any(calc_state[:, 0:2] == Confs.init_value.value):
             # print("左边越界")
@@ -162,7 +162,7 @@ class tetromino:
             return False, tmppoint, imaginary_game_state
         return True, tmppoint, imaginary_game_state
 
-    def can_move_right(self, board_state: np.ndarray):
+    def can_move_right(self, board_state: np.ndarray, current_point=None):
         """
         判断当前的俄罗斯方块在game board上是否能够往右边移动
         1. 假如此方块已经在game board的右边，继续往右移动则会越界
@@ -174,10 +174,10 @@ class tetromino:
         Returns:
             [type]: [description]
         """
-        tmppoint = (self.center_point[0], self.center_point[1] + 1)
-        calc_state = get_calc_state(
-            self.type, self.center_point[1] + 1, self.center_point[0], self.rotate
-        )
+        if current_point is None:
+            current_point = self.center_point
+        tmppoint = (current_point[0], current_point[1] + 1)
+        calc_state = get_calc_state(self.type, tmppoint[1], tmppoint[0], self.rotate)
         # 判断右边是否越界
         if np.any(calc_state[:, -2:-1] == Confs.init_value.value):
             # print("右边越界")
@@ -195,13 +195,33 @@ class tetromino:
 
         return True, tmppoint, imaginary_game_state
 
-    def can_move_down(self, board_state: np.ndarray):
-        pass
+    def can_move_down(self, board_state: np.ndarray, current_point=None):
+        if current_point is None:
+            current_point = self.center_point
+        tmppoint = (current_point[0] + 1, current_point[1])
+        calc_state = get_calc_state(self.type, tmppoint[1], tmppoint[0], self.rotate)
+        # 移动到底部了，这个方块死掉，生成一个新的方块
+        if np.any(calc_state[Confs.row_count.value + 1 :, :] == Confs.init_value.value):
+            # print("俄罗斯方块死亡 : 到达了底部后又继续向下移动")
+            return False, True, tmppoint, None
+
+        imaginary_game_state = (
+            board_state
+            + calc_state[1 : Confs.row_count.value + 1, 2 : Confs.col_count.value + 2]
+        )
+        # 往下移动的时候，被别的方块挡住了，这个方块死掉，生成一个新的方块
+        if np.any(
+            imaginary_game_state == Confs.init_value.value + Confs.solid_value.value
+        ):
+            # print("俄罗斯方块死亡 : 被别的方块挡住又继续向下移动")
+            return False, True, tmppoint, None
+
+        return True, False, tmppoint, imaginary_game_state
 
     def can_move_bottom(self, board_state: np.ndarray):
         pass
 
-    def can_rotate_on_board(self, board_state: np.ndarray):
+    def can_rotate_on_board(self, board_state: np.ndarray, tmprotate=None):
         """
         判断当前的俄罗斯方块在game board上是否能旋转
         1. 假如此方块是正方块，则返回False
@@ -214,7 +234,8 @@ class tetromino:
         Returns:
             [type]: [description]
         """
-        tmprotate = self.rotate
+        if tmprotate is None:
+            tmprotate = self.rotate
         # 一字形、z形、反z形的旋转
         if (
             self.type == Block_Type.I
