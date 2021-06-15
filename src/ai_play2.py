@@ -21,7 +21,7 @@ row_count, col_count = 20, 10
 
 
 def ai_play(model_file):
-    model = DQN(row_count, col_count, 2)
+    model = DQN(row_count, col_count, 4)
     model.load_state_dict(torch.load(model_file))
     model.eval()
     env = tetris_engine()
@@ -48,7 +48,7 @@ def ai_play(model_file):
         tensor = tensor.float()
         pred_q = model(tensor)
         # print("##############")
-        # print(pred_q)
+        print(pred_q)
         # print(pred_q.data)
         # print(pred_q.data.max(1))
         # print(pred_q.data.max(1)[1])
@@ -70,9 +70,9 @@ def ai_play(model_file):
         # else:
         #     raise Exception("Error prediction")
 
-        print(
-            f"left max step is {env.test_step(Action_Type.Left)} , right max step is {env.test_step(Action_Type.Right)} , down max step is {env.test_step(Action_Type.Down)} , rotate max step is {env.test_step(Action_Type.Rotate)}"
-        )
+        # print(
+        #     f"left max step is {env.test_step(Action_Type.Left)} , right max step is {env.test_step(Action_Type.Right)} , down max step is {env.test_step(Action_Type.Down)} , rotate max step is {env.test_step(Action_Type.Rotate)}"
+        # )
 
         if key == ord("w"):
             # rotate
@@ -114,5 +114,5 @@ def ai_play(model_file):
 
 if __name__ == "__main__":
     # human_play()
-    ai_play("outputs/Tetris_100000_batch.pt")
+    ai_play("outputs/Tetris_100000_testcnn.pt")
     sys.exit(0)

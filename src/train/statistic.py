@@ -9,6 +9,23 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 
 
 def train_DQN():
+    """
+
+    test_1623398527_b2193f61的运行结果：
+
+    count    1000000.000000
+    mean         891.897343
+    std          167.805117
+    min          233.000000
+    25%          778.000000
+    50%          895.000000
+    75%         1007.000000
+    max         1675.000000
+    Name: StepCount, dtype: float64
+
+        Raises:
+            Exception: [description]
+    """
     env = tetris_engine()
 
     episodes = 1000000

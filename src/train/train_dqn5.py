@@ -46,6 +46,8 @@ class ReplayMemory(object):
 
 memory = ReplayMemory(Replay_Capacity)
 
+episodes = 100000
+
 
 def testcnn_reward(new_state):
     x = Confs.col_count.value
@@ -61,12 +63,29 @@ def testcnn_reward(new_state):
     return x, y
 
 
+def sample_data(p_episodes):
+    env = tetris_engine()
+    res = []
+    for _ in range(p_episodes):
+        game_state = env.reset()
+        for _ in range(2000):
+            action_index, action = env.select_random_step()
+            r1 = env.test_step(Action_Type.Left)
+            r2 = env.test_step(Action_Type.Right)
+            r3 = env.test_step(Action_Type.Rotate)
+            r4 = env.test_step(Action_Type.Down)
+            new_state, reward, done, debug = env.step(action)
+            if done:
+                break
+            res.append((game_state, action_index, new_state, (r1, r2, r3, r4)))
+            game_state = new_state
+    return res
+
+
 def train_DQN():
     gamma = 0.95
 
     env = tetris_engine()
-
-    episodes = 100000
 
     model = DQN(Confs.row_count.value, Confs.col_count.value, 4)
     loss_fn = nn.SmoothL1Loss()
@@ -76,17 +95,19 @@ def train_DQN():
 
     # 运行10局游戏
     for _ in range(episodes):
+        print(datetime.datetime.now())
         game_state = env.reset()
 
         # 每局游戏最多1000步
-        for _ in range(1000):
+        for _ in range(2000):
             action_index, action = env.select_random_step()
-            new_state, reward, done, debug = env.step(action)
 
             r1 = env.test_step(Action_Type.Left)
             r2 = env.test_step(Action_Type.Right)
             r3 = env.test_step(Action_Type.Rotate)
             r4 = env.test_step(Action_Type.Down)
+
+            new_state, reward, done, debug = env.step(action)
 
             if done:
                 break
@@ -119,6 +140,9 @@ def train_DQN():
 
                 state_action_values = model(state_batch)
 
+                print(state_batch[0, 0, :, :])
+                print(reward_batch[0, :])
+
                 # print(state_action_values, reward_batch)
 
                 expected_state_action_values = reward_batch
@@ -135,7 +159,7 @@ def train_DQN():
             game_state = new_state
 
     filename = f"Tetris_{episodes}.pt"
-    torch.save(model.state_dict(), os.path.join("./outputs/", filename))
+    # torch.save(model.state_dict(), os.path.join("./outputs/", filename))
     print("############## End Training", datetime.datetime.now())
 
 
