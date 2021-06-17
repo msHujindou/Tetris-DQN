@@ -1,12 +1,5 @@
 """
-train_dqn4训练成功，现有的CNN模型可以识别活着的俄罗斯方块距离右边、下边的距离
-此脚本将对testcnn_reward做出更改，判断CNN是否能够识别出活着的方块距离障碍物的距离
-
-此脚本加进来了multi-processing, 作为对比，不使用multi-processing训练100000次需要42小时，
-使用multi-processing训练200000次，仅仅需要33小时
-
-test_1623759043_e6ba83bb的结果显示：活着的俄罗斯方块可以正确判断往左、往右障碍物的间隙，
-以及可以旋转的次数，但是往下的间隙基本都是错的
+train_dqn5基础上，
 """
 import os
 import datetime
@@ -19,9 +12,10 @@ from game.confs import Action_Type, Confs
 from game.tetris_engine import tetris_engine
 
 from model.cnn_model import DQN
+import multiprocessing as mp
 
-MAX_Batch_Size = 51200
-Replay_Capacity = 51200 * 3
+MAX_Batch_Size = 51200 * 2
+Replay_Capacity = 51200 * 2
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -52,8 +46,8 @@ class ReplayMemory(object):
 
 memory = ReplayMemory(Replay_Capacity)
 
-episodes_total = 6000
-episodes_each_process = 100
+episodes_total = 200000
+episodes_each_process = 500
 
 
 def testcnn_reward(new_state):
@@ -90,18 +84,19 @@ def sample_data(p_episodes):
     return res
 
 
-import multiprocessing as mp
-
-
 def train_DQN():
-    gamma = 0.95
     cpu_count = mp.cpu_count()
 
     model = DQN(Confs.row_count.value, Confs.col_count.value, 4)
     loss_fn = nn.SmoothL1Loss()
     opt = torch.optim.RMSprop(model.parameters())
 
+    print("############## mp.cpu_count() =", cpu_count)
+    print("############## iteration count =", episodes_total // (cpu_count * episodes_each_process))
     print("############## Start Training", datetime.datetime.now())
+
+    # 如果不设置spawn模式，在Linux环境下同一批次模拟出来的结果，完全一样，
+    mp.set_start_method('spawn')
 
     with mp.Pool(processes=cpu_count) as pool:
         for _ in range(episodes_total // (cpu_count * episodes_each_process)):
@@ -109,10 +104,12 @@ def train_DQN():
             res = pool.map(sample_data, task_list)
 
             for itm_lst in res:
+                if _ <= 0:
+                    print("#### size of state list is", len(itm_lst))
+                    print(itm_lst[0])
+
                 for itm in itm_lst:
-
                     memory.push(itm[0], itm[1], itm[2], itm[3])
-
                     if (
                         memory.added_item_count != 0
                         and memory.added_item_count % MAX_Batch_Size == 0
@@ -143,8 +140,7 @@ def train_DQN():
                             print("#### Current Datetime:", datetime.datetime.now())
                             print(state_batch[0, 0, :, :])
                             print(reward_batch[0, :])
-
-                        # print(state_action_values, reward_batch)
+                            print(state_action_values[0, :])
 
                         expected_state_action_values = reward_batch
 
@@ -163,8 +159,4 @@ def train_DQN():
 
 
 if __name__ == "__main__":
-    import cProfile
-
-    with cProfile.Profile() as pr:
-        train_DQN()
-    pr.print_stats()
+    train_DQN()
