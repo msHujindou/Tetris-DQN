@@ -1,6 +1,5 @@
 """
-train_dqn5的multi-processing在windows下工作正常，在Linux下，同一批次获得的数据完全一样
-故，需要设置spawn
+train_dqn6基础上，加上profiler并适当减少了episode数量
 """
 import os
 import datetime
@@ -14,6 +13,8 @@ from game.tetris_engine import tetris_engine
 
 from model.cnn_model import DQN
 import multiprocessing as mp
+from pstats import SortKey
+import cProfile, pstats, io
 
 MAX_Batch_Size = 51200 * 2
 Replay_Capacity = 51200 * 2
@@ -47,7 +48,7 @@ class ReplayMemory(object):
 
 memory = ReplayMemory(Replay_Capacity)
 
-episodes_total = 200000
+episodes_total = 4000
 episodes_each_process = 100
 
 
@@ -163,4 +164,14 @@ def train_DQN():
 
 
 if __name__ == "__main__":
+    pr = cProfile.Profile()
+    pr.enable()
+
     train_DQN()
+
+    pr.disable()
+    s = io.StringIO()
+    sortby = SortKey.CUMULATIVE
+    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    ps.print_stats()
+    print(s.getvalue())
