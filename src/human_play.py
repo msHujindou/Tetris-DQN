@@ -1,138 +1,82 @@
-"""
-此脚本负责 - 手工运行游戏或者用AI运行游戏
-"""
-import sys
-
-import numpy as np
 import cv2
-
-from game.tetris import block
+from game.confs import Action_Type, Confs
+import numpy as np
+from game.tetris_engine import tetris_engine
 from utils.util import create_image_from_state
 
-# 俄罗斯方块矩阵的高度和宽度
-row_count, col_count = 20, 10
+
+def testcnn_reward(new_state):
+    x = Confs.col_count.value
+    y = Confs.row_count.value
+    for tmpx in range(Confs.col_count.value):
+        if np.any(new_state[:, Confs.col_count.value - 1 - tmpx] == 128):
+            x = tmpx
+            break
+    for tmpy in range(Confs.row_count.value):
+        if np.any(new_state[Confs.row_count.value - 1 - tmpy, :] == 128):
+            y = tmpy
+            break
+    print(x, y)
+    return x, y
 
 
 def human_play():
-    # 检查游戏是否成功
-    board_state = np.zeros((row_count, col_count), np.ubyte)
-    line = block()
-    game_state, bloc_state = line.preview_init(board_state)
-    stopflag = False
+    env = tetris_engine()
+    game_state = env.reset()
     debug_img = None
+    is_end = False
     while True:
         img = create_image_from_state(game_state)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         cv2.imshow("frame", img)
         if debug_img is not None:
             cv2.imshow("debug", debug_img)
-        k = cv2.waitKey(10)
+        key = cv2.waitKey(10)
         # press Q or ESC
-        if k == ord("q") or k == 27:
+        if key == ord("q") or key == 27:
             break
 
-        if stopflag:
+        if is_end:
             continue
 
-        if k == ord("w"):
-            (
-                stopflag,
-                cleared_count,
-                created_block,
-                restate,
-                dbginfo,
-                board_state,
-            ) = line.step(2, board_state)
-            print(
-                f"action:{'rotate'} ,new_game_state_returned:{restate is not None} ,new_tetris_block_created:{created_block is not None} ,gamestop:{stopflag}"
-            )
-            if restate is not None:
-                game_state = restate
-            if created_block is not None:
-                line = created_block
-            if dbginfo is not None:
-                debug_img = create_image_from_state(dbginfo)
+        if key == ord("w"):
+            # rotate
+            game_state, reward, is_end, debug = env.step(Action_Type.Rotate_Down)
+            # print(f"reward [{reward}], is_end [{is_end}]")
+            if debug is not None:
+                debug_img = create_image_from_state(debug)
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
-        elif k == ord("s"):
-            (
-                stopflag,
-                cleared_count,
-                created_block,
-                restate,
-                dbginfo,
-                board_state,
-            ) = line.step(3, board_state)
-            print(
-                f"action:{'down'} ,new_game_state_returned:{restate is not None} ,new_tetris_block_created:{created_block is not None} ,gamestop:{stopflag}"
-            )
-            if restate is not None:
-                game_state = restate
-            if created_block is not None:
-                line = created_block
-            if dbginfo is not None:
-                debug_img = create_image_from_state(dbginfo)
+        elif key == ord("s"):
+            # down
+            game_state, reward, is_end, debug = env.step(Action_Type.Down)
+            testcnn_reward(game_state)
+            # print(f"reward [{reward}], is_end [{is_end}]")
+            if debug is not None:
+                debug_img = create_image_from_state(debug)
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
-        elif k == ord("a"):
-            (
-                stopflag,
-                cleared_count,
-                created_block,
-                restate,
-                dbginfo,
-                board_state,
-            ) = line.step(0, board_state)
-            print(
-                f"action:{'left'} ,new_game_state_returned:{restate is not None} ,new_tetris_block_created:{created_block is not None} ,gamestop:{stopflag}"
-            )
-            if restate is not None:
-                game_state = restate
-            if created_block is not None:
-                line = created_block
-            if dbginfo is not None:
-                debug_img = create_image_from_state(dbginfo)
+        elif key == ord("a"):
+            # left
+            game_state, reward, is_end, debug = env.step(Action_Type.Left_Down)
+            # print(f"reward [{reward}], is_end [{is_end}]")
+            if debug is not None:
+                debug_img = create_image_from_state(debug)
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
-        elif k == ord("d"):
-            (
-                stopflag,
-                cleared_count,
-                created_block,
-                restate,
-                dbginfo,
-                board_state,
-            ) = line.step(1, board_state)
-            print(
-                f"action:{'right'} ,new_game_state_returned:{restate is not None} ,new_tetris_block_created:{created_block is not None} ,gamestop:{stopflag}"
-            )
-            if restate is not None:
-                game_state = restate
-            if created_block is not None:
-                line = created_block
-            if dbginfo is not None:
-                debug_img = create_image_from_state(dbginfo)
+        elif key == ord("d"):
+            # right
+            game_state, reward, is_end, debug = env.step(Action_Type.Right_Down)
+            # print(f"reward [{reward}], is_end [{is_end}]")
+            if debug is not None:
+                debug_img = create_image_from_state(debug)
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
-        elif k == ord(" "):
-            (
-                stopflag,
-                cleared_count,
-                created_block,
-                restate,
-                dbginfo,
-                board_state,
-            ) = line.step(4, board_state)
-            print(
-                f"action:{'bottom'} ,new_game_state_returned:{restate is not None} ,new_tetris_block_created:{created_block is not None} ,gamestop:{stopflag}"
-            )
-            if restate is not None:
-                game_state = restate
-            if created_block is not None:
-                line = created_block
-            if dbginfo is not None:
-                debug_img = create_image_from_state(dbginfo)
+        elif key == ord(" "):
+            # bottom
+            game_state, reward, is_end, debug = env.step(Action_Type.Bottom)
+            # print(f"reward [{reward}], is_end [{is_end}]")
+            if debug is not None:
+                debug_img = create_image_from_state(debug)
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
-
     cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
     human_play()
-    sys.exit(0)

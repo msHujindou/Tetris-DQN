@@ -1,7 +1,7 @@
 """
-此脚本的目的是为了统计一下训练的耗时组成,
-train_dqn6基础上，加上profiler并适当减少了episode数量,
-请参考test_1623980623_ef1a48e0的log
+在train_dqn6的基础上，reward由根据当前state计算，
+改为只计算对应action部分的reward
+用来测试CNN
 """
 import os
 import datetime
@@ -15,8 +15,6 @@ from game.tetris_engine import tetris_engine
 
 from model.cnn_model import DQN
 import multiprocessing as mp
-from pstats import SortKey
-import cProfile, pstats, io
 
 MAX_Batch_Size = 51200 * 2
 Replay_Capacity = 51200 * 2
@@ -50,7 +48,7 @@ class ReplayMemory(object):
 
 memory = ReplayMemory(Replay_Capacity)
 
-episodes_total = 4000
+episodes_total = 200000
 episodes_each_process = 100
 
 
@@ -76,14 +74,11 @@ def sample_data(p_episodes):
         # 每局游戏最多1600多步
         for _ in range(2000):
             action_index, action = env.select_random_step()
-            r1 = env.test_step(Action_Type.Left)
-            r2 = env.test_step(Action_Type.Right)
-            r3 = env.test_step(Action_Type.Rotate)
-            r4 = env.test_step(Action_Type.Down)
+            r1 = env.test_step(action)
             new_state, reward, done, debug = env.step(action)
             if done:
                 break
-            res.append((game_state, action_index, new_state, (r1, r2, r3, r4)))
+            res.append((game_state, action_index, new_state, r1))
             game_state = new_state
     return res
 
@@ -137,17 +132,20 @@ def train_DQN():
                             state_batch_list.append(ts)
                         state_batch = torch.cat(state_batch_list)
 
+                        action_batch = torch.tensor(
+                            [[act] for act in batch.action], dtype=torch.int64
+                        )
+
                         reward_batch = torch.tensor(
-                            [[rwd[0], rwd[1], rwd[2], rwd[3]] for rwd in batch.reward]
+                            [[rwd] for rwd in batch.reward]
                         ).float()
 
-                        state_action_values = model(state_batch)
+                        state_action_values = model(state_batch).gather(1, action_batch)
 
                         if random.random() < 0.01:
                             print("#### Current Datetime:", datetime.datetime.now())
-                            print(state_batch[0, 0, :, :])
-                            print(reward_batch[0, :])
-                            print(state_action_values[0, :])
+                            print(reward_batch)
+                            print(state_action_values)
 
                         expected_state_action_values = reward_batch
 
@@ -166,14 +164,4 @@ def train_DQN():
 
 
 if __name__ == "__main__":
-    pr = cProfile.Profile()
-    pr.enable()
-
     train_DQN()
-
-    pr.disable()
-    s = io.StringIO()
-    sortby = SortKey.CUMULATIVE
-    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-    ps.print_stats()
-    print(s.getvalue())

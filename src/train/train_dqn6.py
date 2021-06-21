@@ -1,6 +1,10 @@
 """
 train_dqn5的multi-processing在windows下工作正常，在Linux下，同一批次获得的数据完全一样
 故，需要设置spawn
+
+Run47 test_1623985966_8167c458 的训练结果显示：判断左边、右边、旋转次数、距离下边的距离
+model可以给出比较满意的结果。
+当前CNN的结构可以识别出活着的俄罗斯方块
 """
 import os
 import datetime
