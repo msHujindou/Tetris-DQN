@@ -2,6 +2,16 @@
 在train_dqn6的基础上，reward由根据当前state计算，
 改为只计算对应action部分的reward
 用来测试CNN
+
+Run48 test_1624012394_5dcabefb 的结果显示：每一步仅仅做一个action，
+并把此action的reward放入memreplay，最后使用gather的方式计算loss，方向传播，
+得到的model，效果完全比不上 train_dqn6的结果。
+此model不能识别距离左边障碍物的距离
+仅仅能马马虎虎识别右边障碍物的距离
+
+分析原因：
+1，可能是因为训练的样本少了4倍的原因
+2，可能是把reward分开单独计算loss的方式不对
 """
 import os
 import datetime
