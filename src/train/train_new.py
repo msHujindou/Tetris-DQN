@@ -1,17 +1,5 @@
 """
-在train_dqn6的基础上，reward由根据当前state计算，
-改为只计算对应action部分的reward
-用来测试CNN
-
-Run48 test_1624012394_5dcabefb 的结果显示：每一步仅仅做一个action，
-并把此action的reward放入memreplay，最后使用gather的方式计算loss，方向传播，
-得到的model，效果完全比不上 train_dqn6的结果。
-此model不能识别距离左边障碍物的距离
-仅仅能马马虎虎识别右边障碍物的距离
-
-分析原因：
-1，可能是因为训练的样本少了4倍的原因
-2，可能是把reward分开单独计算loss的方式不对
+在train_dqn8以及train_dqn2的基础上，开发的此脚本
 """
 import os
 import datetime
@@ -26,8 +14,8 @@ from game.tetris_engine import tetris_engine
 from model.cnn_model import DQN
 import multiprocessing as mp
 
-MAX_Batch_Size = 51200 * 2
-Replay_Capacity = 51200 * 2
+MAX_Batch_Size = 51200
+Replay_Capacity = 51200 * 4
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -58,7 +46,7 @@ class ReplayMemory(object):
 
 memory = ReplayMemory(Replay_Capacity)
 
-episodes_total = 800000
+episodes_total = 1200000
 episodes_each_process = 100
 
 
@@ -70,16 +58,16 @@ def sample_data(p_episodes):
         # 每局游戏最多1600多步
         for _ in range(2000):
             action_index, action = env.select_random_step()
-            r1 = env.test_step(action)
             new_state, reward, done, debug = env.step(action)
             if done:
                 break
-            res.append((game_state, action_index, new_state, r1))
+            res.append((game_state, action_index, new_state, reward))
             game_state = new_state
     return res
 
 
 def train_DQN():
+    gamma = 0.95
     cpu_count = mp.cpu_count()
 
     model = DQN(Confs.row_count.value, Confs.col_count.value, 4)
@@ -138,12 +126,25 @@ def train_DQN():
 
                         state_action_values = model(state_batch).gather(1, action_batch)
 
+                        next_state_batch_list = []
+                        for tmp_state in batch.next_state:
+                            ts = torch.from_numpy(tmp_state)
+                            ts = ts.unsqueeze(0)
+                            ts = ts.unsqueeze(0)
+                            ts = ts.float()
+                            next_state_batch_list.append(ts)
+                        non_final_next_states = torch.cat(next_state_batch_list)
+                        next_state_values = (
+                            model(non_final_next_states).max(1)[0].unsqueeze(1).detach()
+                        )
+                        expected_state_action_values = (
+                            next_state_values * gamma + reward_batch
+                        )
+
                         if random.random() < 0.01:
                             print("#### Current Datetime:", datetime.datetime.now())
-                            print(reward_batch)
+                            print(expected_state_action_values)
                             print(state_action_values)
-
-                        expected_state_action_values = reward_batch
 
                         l = loss_fn(state_action_values, expected_state_action_values)
                         opt.zero_grad()
