@@ -1,7 +1,10 @@
 """
-此脚本的目的是为了统计一下训练的耗时组成,
-train_dqn6基础上，加上profiler并适当减少了episode数量,
-请参考test_1623980623_ef1a48e0的log
+根据train_dqn8的训练结果，此脚本的目的验证把训练样本减少4倍后的训练结果，
+是否和train_dqn8的训练结果一致。
+
+Run 49 test_1624243842_0fa9be3e的训练结果显示
+把episodes_total由200000减少至50000，model的精度迅速降低
+和train_dqn8的结果差不多
 """
 import os
 import datetime
@@ -15,8 +18,6 @@ from game.tetris_engine import tetris_engine
 
 from model.cnn_model import DQN
 import multiprocessing as mp
-from pstats import SortKey
-import cProfile, pstats, io
 
 MAX_Batch_Size = 51200 * 2
 Replay_Capacity = 51200 * 2
@@ -50,7 +51,7 @@ class ReplayMemory(object):
 
 memory = ReplayMemory(Replay_Capacity)
 
-episodes_total = 40000
+episodes_total = 50000
 episodes_each_process = 100
 
 
@@ -166,14 +167,4 @@ def train_DQN():
 
 
 if __name__ == "__main__":
-    pr = cProfile.Profile()
-    pr.enable()
-
     train_DQN()
-
-    pr.disable()
-    s = io.StringIO()
-    sortby = SortKey.CUMULATIVE
-    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-    ps.print_stats()
-    print(s.getvalue())

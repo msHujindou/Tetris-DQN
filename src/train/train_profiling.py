@@ -1,7 +1,5 @@
 """
-此脚本的目的是为了统计一下训练的耗时组成,
-train_dqn6基础上，加上profiler并适当减少了episode数量,
-请参考test_1623980623_ef1a48e0的log
+此脚本的目的是为了精确计算耗时,基于train_dqn7.py
 """
 import os
 import datetime
@@ -102,63 +100,66 @@ def train_DQN():
     )
     print("############## Start Training", datetime.datetime.now())
 
-    # 如果不设置spawn模式，在Linux环境下同一批次模拟出来的结果，完全一样，
-    mp.set_start_method("spawn")
+    env = tetris_engine()
+    for _ in range(episodes_total):
+        game_state = env.reset()
+        # 每局游戏最多1600多步
+        for _ in range(2000):
+            action_index, action = env.select_random_step()
+            r1 = env.test_step(Action_Type.Left)
+            r2 = env.test_step(Action_Type.Right)
+            r3 = env.test_step(Action_Type.Rotate)
+            r4 = env.test_step(Action_Type.Down)
+            new_state, reward, done, debug = env.step(action)
 
-    with mp.Pool(processes=cpu_count) as pool:
-        for _ in range(episodes_total // (cpu_count * episodes_each_process)):
-            task_list = [episodes_each_process for _ in range(cpu_count)]
-            res = pool.map(sample_data, task_list)
+            if done:
+                break
 
-            for itm_lst in res:
-                if _ <= 0:
-                    print("#### size of state list is", len(itm_lst))
-                    print(itm_lst[0])
+            memory.push(game_state, action_index, new_state, (r1, r2, r3, r4))
+            game_state = new_state
 
-                for itm in itm_lst:
-                    memory.push(itm[0], itm[1], itm[2], itm[3])
-                    if (
-                        memory.added_item_count != 0
-                        and memory.added_item_count % MAX_Batch_Size == 0
-                    ):
-                        BATCH_SIZE = MAX_Batch_Size
-                        if len(memory) < BATCH_SIZE:
-                            BATCH_SIZE = len(memory)
-                        transitions = memory.sample(BATCH_SIZE)
-                        batch = Transition(*zip(*transitions))
-                        memory.added_item_count = 0
+            if (
+                memory.added_item_count != 0
+                and memory.added_item_count % MAX_Batch_Size == 0
+            ):
+                BATCH_SIZE = MAX_Batch_Size
+                if len(memory) < BATCH_SIZE:
+                    BATCH_SIZE = len(memory)
+                transitions = memory.sample(BATCH_SIZE)
+                batch = Transition(*zip(*transitions))
+                memory.added_item_count = 0
 
-                        state_batch_list = []
-                        for tmp_state in batch.state:
-                            ts = torch.from_numpy(tmp_state)
-                            ts = ts.unsqueeze(0)
-                            ts = ts.unsqueeze(0)
-                            ts = ts.float()
-                            state_batch_list.append(ts)
-                        state_batch = torch.cat(state_batch_list)
+                state_batch_list = []
+                for tmp_state in batch.state:
+                    ts = torch.from_numpy(tmp_state)
+                    ts = ts.unsqueeze(0)
+                    ts = ts.unsqueeze(0)
+                    ts = ts.float()
+                    state_batch_list.append(ts)
+                state_batch = torch.cat(state_batch_list)
 
-                        reward_batch = torch.tensor(
-                            [[rwd[0], rwd[1], rwd[2], rwd[3]] for rwd in batch.reward]
-                        ).float()
+                reward_batch = torch.tensor(
+                    [[rwd[0], rwd[1], rwd[2], rwd[3]] for rwd in batch.reward]
+                ).float()
 
-                        state_action_values = model(state_batch)
+                state_action_values = model(state_batch)
 
-                        if random.random() < 0.01:
-                            print("#### Current Datetime:", datetime.datetime.now())
-                            print(state_batch[0, 0, :, :])
-                            print(reward_batch[0, :])
-                            print(state_action_values[0, :])
+                if random.random() < 0.01:
+                    print("#### Current Datetime:", datetime.datetime.now())
+                    print(state_batch[0, 0, :, :])
+                    print(reward_batch[0, :])
+                    print(state_action_values[0, :])
 
-                        expected_state_action_values = reward_batch
+                expected_state_action_values = reward_batch
 
-                        l = loss_fn(state_action_values, expected_state_action_values)
-                        opt.zero_grad()
-                        l.backward()
+                l = loss_fn(state_action_values, expected_state_action_values)
+                opt.zero_grad()
+                l.backward()
 
-                        # pytorch 的实例代码里有这么一段
-                        for param in model.parameters():
-                            param.grad.data.clamp_(-1, 1)
-                        opt.step()
+                # pytorch 的实例代码里有这么一段
+                for param in model.parameters():
+                    param.grad.data.clamp_(-1, 1)
+                opt.step()
 
     filename = f"Tetris_{episodes_total}.pt"
     torch.save(model.state_dict(), os.path.join("./outputs/", filename))

@@ -104,5 +104,5 @@ def ai_play(model_file):
 
 if __name__ == "__main__":
     # human_play()
-    ai_play("outputs/Tetris_200000_split.pt")
+    ai_play("outputs/Tetris_50000.pt")
     sys.exit(0)
