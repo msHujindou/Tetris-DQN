@@ -26,7 +26,7 @@ from game.tetris_engine import tetris_engine
 from model.cnn_model import DQN
 import multiprocessing as mp
 
-MAX_Batch_Size = 51200 * 2
+MAX_Batch_Size = 51200
 Replay_Capacity = 51200 * 2
 
 
