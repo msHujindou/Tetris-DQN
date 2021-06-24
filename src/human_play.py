@@ -1,5 +1,5 @@
 import cv2
-from game.confs import Action_Type, Confs
+from game.confs import Action_Type, Block_Type, Confs
 import numpy as np
 from game.tetris_engine import tetris_engine
 from utils.util import create_image_from_state
@@ -21,7 +21,7 @@ def testcnn_reward(new_state):
 
 
 def human_play():
-    env = tetris_engine()
+    env = tetris_engine([Block_Type.L, Block_Type.T])
     game_state = env.reset()
     debug_img = None
     is_end = False
@@ -41,7 +41,7 @@ def human_play():
 
         if key == ord("w"):
             # rotate
-            game_state, reward, is_end, debug = env.step(Action_Type.Rotate_Down)
+            game_state, reward, is_end, debug = env.step(Action_Type.Rotate)
             # print(f"reward [{reward}], is_end [{is_end}]")
             if debug is not None:
                 debug_img = create_image_from_state(debug)
@@ -49,21 +49,21 @@ def human_play():
         elif key == ord("s"):
             # down
             game_state, reward, is_end, debug = env.step(Action_Type.Down)
-            testcnn_reward(game_state)
+            # testcnn_reward(game_state)
             # print(f"reward [{reward}], is_end [{is_end}]")
             if debug is not None:
                 debug_img = create_image_from_state(debug)
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
         elif key == ord("a"):
             # left
-            game_state, reward, is_end, debug = env.step(Action_Type.Left_Down)
+            game_state, reward, is_end, debug = env.step(Action_Type.Left)
             # print(f"reward [{reward}], is_end [{is_end}]")
             if debug is not None:
                 debug_img = create_image_from_state(debug)
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
         elif key == ord("d"):
             # right
-            game_state, reward, is_end, debug = env.step(Action_Type.Right_Down)
+            game_state, reward, is_end, debug = env.step(Action_Type.Right)
             # print(f"reward [{reward}], is_end [{is_end}]")
             if debug is not None:
                 debug_img = create_image_from_state(debug)
