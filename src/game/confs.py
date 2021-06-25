@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class Confs(Enum):
-    row_count = 20
+    row_count = 7
     col_count = 10
     init_value = 128
     blank_value = 0
@@ -12,7 +12,7 @@ class Confs(Enum):
     move_right_no_line_cleared_reward = 0.0
     rotate_no_line_cleared_reward = 0.0
     move_down_no_line_cleared_reward = 0.0
-    each_line_reward = 200.0
+    each_line_reward = 100.0
 
 
 class Block_Type(Enum):

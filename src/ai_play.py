@@ -6,7 +6,7 @@ import cv2
 import torch
 from model.cnn_model import DQN
 from utils.util import create_image_from_state
-from game.confs import Action_Type, Confs
+from game.confs import Action_Type, Block_Type, Confs
 from game.tetris_engine import tetris_engine
 
 
@@ -14,7 +14,7 @@ def ai_play(model_file):
     model = DQN(Confs.row_count.value, Confs.col_count.value, 4)
     model.load_state_dict(torch.load(model_file))
     model.eval()
-    env = tetris_engine()
+    env = tetris_engine([Block_Type.O])
     game_state = env.reset()
     debug_img = None
     is_end = False
@@ -104,5 +104,5 @@ def ai_play(model_file):
 
 if __name__ == "__main__":
     # human_play()
-    ai_play("outputs/Tetris_50000.pt")
+    ai_play("outputs/Tetris_800000_T.pt")
     sys.exit(0)

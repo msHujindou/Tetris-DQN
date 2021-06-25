@@ -2,6 +2,14 @@
 此脚本是为了训练 q function, 计算下一个可用的q-table生成的时间
 假定局面是4x10，俄罗斯方块仅仅只有正方形
 4x10，且仅有正方形，总共有10000多种状态，episodes设置成100000可以完美训练出来
+5x10，且仅有正方形，总共有20000多种状态，全部设置成explorer训练，可以得到完美的model
+
+5x10，且仅有山、L形，总共有360万种状态，episodes设置成1000000训练出来的模型完全没法用
+请参考 Run70 test_1624527825_d36f748b
+
+5x10, 且仅有山形，episodes设置成5000000，得到的state状态个数为4969649，此model可以消除两行
+请参考 Run71 test_1624534454_2975f794
+
 """
 import datetime
 import numpy as np
@@ -28,7 +36,7 @@ def train_Q_function():
 
     print("#### Start training,", datetime.datetime.now())
 
-    env = tetris_engine([Block_Type.L, Block_Type.T])
+    env = tetris_engine([Block_Type.O])
     last_max_reward = 0
 
     # 运行10局游戏
@@ -40,11 +48,15 @@ def train_Q_function():
 
         for _ in range(2000):
             explore_exploit_tradeoff = np.random.uniform()
-            if explore_exploit_tradeoff > epsilon:
+            if explore_exploit_tradeoff > 1:
                 if game_state_key not in qtable:
                     qtable[game_state_key] = [0] * env.action_space
-                action = np.argmax(qtable[game_state_key])
-                action_name = env.action_type_list[action]
+                # 某些状态下某些操作是被禁止的，比如靠近边界后的旋转，这个时候需要随机选择一个action
+                if np.max(qtable[game_state_key]) > 0:
+                    action = np.argmax(qtable[game_state_key])
+                    action_name = env.action_type_list[action]
+                else:
+                    action, action_name = env.select_random_step()
             else:
                 action, action_name = env.select_random_step()
 
@@ -72,7 +84,9 @@ def train_Q_function():
             game_state_key = game_state.tobytes().hex()
 
         if total_reward_each_episode > last_max_reward:
-            print(f"episode {episode}'s reward : {total_reward_each_episode}")
+            print(
+                f"@@@@ {datetime.datetime.now()} episode {episode}'s reward : {total_reward_each_episode}"
+            )
             last_max_reward = total_reward_each_episode
 
         epsilon = min_eps + (max_eps - min_eps) * np.exp(-decay_rate * episode)

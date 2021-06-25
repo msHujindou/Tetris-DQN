@@ -13,7 +13,7 @@ import numpy as np
 def ai_play(model_file):
     with open(model_file, "r") as fr:
         model = json.load(fr)
-    env = tetris_engine([Block_Type.L, Block_Type.T])
+    env = tetris_engine([Block_Type.O])
     game_state = env.reset()
     debug_img = None
     is_end = False
@@ -36,9 +36,12 @@ def ai_play(model_file):
             print("Game State not Found")
             # continue
         else:
-            action = np.argmax(model[game_state_key])
-            action_name = env.action_type_list[action]
-            print(action, action_name, model[game_state_key])
+            if np.max(model[game_state_key]) > 0:
+                action = np.argmax(model[game_state_key])
+                action_name = env.action_type_list[action]
+                print(action, action_name, model[game_state_key])
+            else:
+                print("State not found, or dead state")
 
         if key == ord("w"):
             # rotate

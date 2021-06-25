@@ -1,5 +1,14 @@
 """
 在train_dqn8以及train_dqn2的基础上，开发的此脚本
+
+Run 67 test_1624278386_c5061593 的结果表明，
+在左移动、右移动、旋转、向下的操作的情况下，训练的模型会导致俄罗斯方块反复在往左、往右切换
+
+Run 69 test_1624448438_3dfb1ce2 的结果表明
+20x10局面，且仅有山形的俄罗斯方块，episode设置成1200000，训练出来的model完全没法用
+
+Run 75 test_1624537127_75a47871 的结果表明
+10x10局面，且仅有田字形的俄罗斯方块，episode设置成800000，训练出来的model完全没法用，总是倾向往下移动
 """
 import os
 import datetime
@@ -8,7 +17,7 @@ import random
 import numpy as np
 import torch
 import torch.nn as nn
-from game.confs import Action_Type, Confs
+from game.confs import Action_Type, Block_Type, Confs
 from game.tetris_engine import tetris_engine
 
 from model.cnn_model import DQN
@@ -46,12 +55,12 @@ class ReplayMemory(object):
 
 memory = ReplayMemory(Replay_Capacity)
 
-episodes_total = 1200000
+episodes_total = 1300000
 episodes_each_process = 100
 
 
 def sample_data(p_episodes):
-    env = tetris_engine()
+    env = tetris_engine([Block_Type.O])
     res = []
     for _ in range(p_episodes):
         game_state = env.reset()
