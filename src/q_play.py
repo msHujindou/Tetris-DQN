@@ -13,7 +13,7 @@ import numpy as np
 def ai_play(model_file):
     with open(model_file, "r") as fr:
         model = json.load(fr)
-    env = tetris_engine([Block_Type.O])
+    env = tetris_engine([Block_Type.L])
     game_state = env.reset()
     debug_img = None
     is_end = False
@@ -83,5 +83,5 @@ def ai_play(model_file):
 
 if __name__ == "__main__":
     # human_play()
-    ai_play("outputs/q_100000.json")
+    ai_play("outputs/q_18000000.json")
     sys.exit(0)

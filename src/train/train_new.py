@@ -63,7 +63,7 @@ class ReplayMemory(object):
 
 memory = ReplayMemory(Replay_Capacity)
 
-episodes_total = 1300000
+episodes_total = 8000000
 episodes_each_process = 100
 
 
@@ -114,7 +114,20 @@ def train_DQN():
             for itm_lst in res:
                 if _ <= 0:
                     print("#### size of state list is", len(itm_lst))
-                    print(itm_lst[0])
+                    tmpidx = -1
+                    for tmpitem in itm_lst:
+                        tmpidx += 1
+                        if tmpitem[3] > 0:
+                            print(itm_lst[tmpidx - 1][0])
+                            print("action :", itm_lst[tmpidx - 1][1])
+                            print(itm_lst[tmpidx - 1][2])
+                            print("reward :", itm_lst[tmpidx - 1][3])
+                            print("----")
+                            print(tmpitem[0])
+                            print("action :", tmpitem[1])
+                            print(tmpitem[2])
+                            print("reward :", tmpitem[3])
+                            break
 
                 for itm in itm_lst:
                     memory.push(itm[0], itm[1], itm[2], itm[3])
@@ -142,6 +155,13 @@ def train_DQN():
                             [[act] for act in batch.action], dtype=torch.int64
                         )
 
+                        # mx = np.max(batch.reward)
+                        # print("#### max reward", mx)
+                        # print("#### average reward", np.average(batch.reward))
+                        # print("#### count max", np.sum(batch.reward == mx))
+                        # import sys
+                        # sys.exit(0)
+
                         reward_batch = torch.tensor(
                             [[rwd] for rwd in batch.reward]
                         ).float()
@@ -168,8 +188,22 @@ def train_DQN():
 
                         if random.random() < 0.01:
                             print("#### Current Datetime:", datetime.datetime.now())
-                            print(expected_state_action_values)
-                            print(state_action_values)
+                            print(
+                                "expect : max value ",
+                                torch.max(expected_state_action_values),
+                            )
+                            print(
+                                "expect : avg value ",
+                                torch.mean(expected_state_action_values),
+                            )
+                            print(
+                                "predict : max value ",
+                                torch.max(state_action_values),
+                            )
+                            print(
+                                "predict : avg value ",
+                                torch.mean(state_action_values),
+                            )
 
                         l = loss_fn(state_action_values, expected_state_action_values)
                         opt.zero_grad()

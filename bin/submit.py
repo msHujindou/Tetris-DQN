@@ -54,8 +54,8 @@ if __name__ == "__main__":
     experiment = Experiment(workspace=ws, name="test")
     config = ScriptRunConfig(
         source_directory=os.path.join(current_path, "../src"),
-        script="train/train_dqn.py",
-        compute_target="test",
+        script="train/train_dqn8_fc.py",
+        compute_target="test2",
         environment=env,
     )
     run = experiment.submit(config)
