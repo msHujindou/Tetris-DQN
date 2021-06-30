@@ -9,6 +9,14 @@ Run 69 test_1624448438_3dfb1ce2 的结果表明
 
 Run 75 test_1624537127_75a47871 的结果表明
 10x10局面，且仅有田字形的俄罗斯方块，episode设置成800000，训练出来的model完全没法用，总是倾向往下移动
+
+Run 78 test_1624619472_01b4cd06 的结果表明
+7x10局面，且仅有田字形的俄罗斯方块，episode设置成1300000，训练出来的model基本接近没法用，
+会倾向生成让其旋转的结果。
+
+Run 81 test_1624968965_fdfa86a3 的结果表明
+7x10局面，且仅有田字形的俄罗斯方块，episode设置成1300000，加入double dqn结构，训练出来的model接近没法用
+
 """
 import os
 import datetime
@@ -80,6 +88,11 @@ def train_DQN():
     cpu_count = mp.cpu_count()
 
     model = DQN(Confs.row_count.value, Confs.col_count.value, 4)
+    # 加入 double DQN 结构
+    target_net = DQN(Confs.row_count.value, Confs.col_count.value, 4)
+    target_net.load_state_dict(model.state_dict())
+    target_net.eval()
+
     loss_fn = nn.SmoothL1Loss()
     opt = torch.optim.RMSprop(model.parameters())
 
@@ -144,7 +157,10 @@ def train_DQN():
                             next_state_batch_list.append(ts)
                         non_final_next_states = torch.cat(next_state_batch_list)
                         next_state_values = (
-                            model(non_final_next_states).max(1)[0].unsqueeze(1).detach()
+                            target_net(non_final_next_states)
+                            .max(1)[0]
+                            .detach()
+                            .unsqueeze(1)
                         )
                         expected_state_action_values = (
                             next_state_values * gamma + reward_batch
@@ -163,6 +179,9 @@ def train_DQN():
                         for param in model.parameters():
                             param.grad.data.clamp_(-1, 1)
                         opt.step()
+
+            if _ > 0 and _ % 10 == 0:
+                target_net.load_state_dict(model.state_dict())
 
     filename = f"Tetris_{episodes_total}.pt"
     torch.save(model.state_dict(), os.path.join("./outputs/", filename))

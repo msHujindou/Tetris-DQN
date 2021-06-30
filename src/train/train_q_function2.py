@@ -27,16 +27,16 @@ def train_Q_function():
     epsilon = 1.0
     qtable = {}
 
-    episodes = 100000
+    episodes = 18000000
 
-    conf_last_episode = 0.99
+    conf_last_episode = 0.5
     decay_rate = -np.log((conf_last_episode - min_eps) / (max_eps - min_eps)) / episodes
 
     print(decay_rate)
 
     print("#### Start training,", datetime.datetime.now())
 
-    env = tetris_engine([Block_Type.O])
+    env = tetris_engine([Block_Type.L])
     last_max_reward = 0
 
     # 运行10局游戏
@@ -48,7 +48,7 @@ def train_Q_function():
 
         for _ in range(2000):
             explore_exploit_tradeoff = np.random.uniform()
-            if explore_exploit_tradeoff > 1:
+            if explore_exploit_tradeoff > epsilon:
                 if game_state_key not in qtable:
                     qtable[game_state_key] = [0] * env.action_space
                 # 某些状态下某些操作是被禁止的，比如靠近边界后的旋转，这个时候需要随机选择一个action
