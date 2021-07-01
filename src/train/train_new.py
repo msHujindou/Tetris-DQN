@@ -17,6 +17,9 @@ Run 78 test_1624619472_01b4cd06 的结果表明
 Run 81 test_1624968965_fdfa86a3 的结果表明
 7x10局面，且仅有田字形的俄罗斯方块，episode设置成1300000，加入double dqn结构，训练出来的model接近没法用
 
+Run 82 test_1625030677_d44e4e87 的结果表明
+7x10局面，且仅有田字形的俄罗斯方块，episode设置成8000000，double dqn结构，训练出来的model完全没法用
+
 """
 import os
 import datetime

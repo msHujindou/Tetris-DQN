@@ -1,5 +1,9 @@
 """
-在 train_dqn9 的基础上，将CNN Model换成FC Model
+在 train_dqn9 的基础上，将 CNN Model 换成 FC Model
+
+Run 83 test_1625051155_f5c259cb 的训练结果:
+局面为20x10，episodes为200000，训练出来的model可以勉勉强强识别距离左边、右边、下边的距离
+
 """
 import os
 import datetime
