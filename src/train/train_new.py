@@ -20,6 +20,9 @@ Run 81 test_1624968965_fdfa86a3 的结果表明
 Run 82 test_1625030677_d44e4e87 的结果表明
 7x10局面，且仅有田字形的俄罗斯方块，episode设置成8000000，double dqn结构，训练出来的model完全没法用
 
+Run 89 test_1625129311_4d2cd398 的结果表明
+7x10局面，且仅有田字形的俄罗斯方块，episode设置成8000000, 非 double dqn，训练出来的model完全没法用
+但比double dqn训练出来的稍微好一点，移动俄罗斯方块时predicition value至少能变化
 """
 import os
 import datetime
@@ -180,10 +183,7 @@ def train_DQN():
                             next_state_batch_list.append(ts)
                         non_final_next_states = torch.cat(next_state_batch_list)
                         next_state_values = (
-                            target_net(non_final_next_states)
-                            .max(1)[0]
-                            .detach()
-                            .unsqueeze(1)
+                            model(non_final_next_states).max(1)[0].detach().unsqueeze(1)
                         )
                         expected_state_action_values = (
                             next_state_values * gamma + reward_batch

@@ -1,22 +1,12 @@
 """
-在train_dqn8以及train_dqn2的基础上，开发的此脚本
+在train_new的基础上，将原来的CNN替换成FC
 
-Run 67 test_1624278386_c5061593 的结果表明，
-在左移动、右移动、旋转、向下的操作的情况下，训练的模型会导致俄罗斯方块反复在往左、往右切换
+Run 86 test_1625052484_4df1a41d 的结果表明
+5x10局面，且仅有田字形的俄罗斯方块，episode设置成8000000，double dqn结构，训练出来的model接近没法用
 
-Run 69 test_1624448438_3dfb1ce2 的结果表明
-20x10局面，且仅有山形的俄罗斯方块，episode设置成1200000，训练出来的model完全没法用
-
-Run 75 test_1624537127_75a47871 的结果表明
-10x10局面，且仅有田字形的俄罗斯方块，episode设置成800000，训练出来的model完全没法用，总是倾向往下移动
-
-Run 78 test_1624619472_01b4cd06 的结果表明
-7x10局面，且仅有田字形的俄罗斯方块，episode设置成1300000，训练出来的model基本接近没法用，
-会倾向生成让其旋转的结果。
-
-Run 81 test_1624968965_fdfa86a3 的结果表明
-7x10局面，且仅有田字形的俄罗斯方块，episode设置成1300000，加入double dqn结构，训练出来的model接近没法用
-
+Run 88 test_1625125438_0d610e3a 的结果表明
+7x10局面，且仅有田字形的俄罗斯方块，episode设置成8000000, 非double dqn结构，训练出来的model没法用，
+移动俄罗斯方块，prediction values总是保持不变
 """
 import os
 import datetime
@@ -180,10 +170,7 @@ def train_DQN():
                             next_state_batch_list.append(ts)
                         non_final_next_states = torch.cat(next_state_batch_list)
                         next_state_values = (
-                            target_net(non_final_next_states)
-                            .max(1)[0]
-                            .detach()
-                            .unsqueeze(1)
+                            model(non_final_next_states).max(1)[0].detach().unsqueeze(1)
                         )
                         expected_state_action_values = (
                             next_state_values * gamma + reward_batch

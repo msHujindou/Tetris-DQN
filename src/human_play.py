@@ -21,7 +21,7 @@ def testcnn_reward(new_state):
 
 
 def human_play():
-    env = tetris_engine([Block_Type.L])
+    env = tetris_engine([Block_Type.O])
     game_state = env.reset()
     debug_img = None
     is_end = False

@@ -15,7 +15,7 @@ def ai_play(model_file):
     model = DQN_FC(Confs.row_count.value, Confs.col_count.value, 4)
     model.load_state_dict(torch.load(model_file))
     model.eval()
-    env = tetris_engine()
+    env = tetris_engine([Block_Type.O])
     game_state = env.reset()
     debug_img = None
     is_end = False
@@ -102,5 +102,5 @@ def ai_play(model_file):
 
 if __name__ == "__main__":
     # human_play()
-    ai_play("outputs/Tetris_FC_1600.pt")
+    ai_play("outputs/Tetris_FC_8000000.pt")
     sys.exit(0)
