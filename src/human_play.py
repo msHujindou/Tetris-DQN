@@ -5,29 +5,16 @@ from game.tetris_engine import tetris_engine
 from utils.util import create_image_from_state
 
 
-def testcnn_reward(new_state):
-    x = Confs.col_count.value
-    y = Confs.row_count.value
-    for tmpx in range(Confs.col_count.value):
-        if np.any(new_state[:, Confs.col_count.value - 1 - tmpx] == 128):
-            x = tmpx
-            break
-    for tmpy in range(Confs.row_count.value):
-        if np.any(new_state[Confs.row_count.value - 1 - tmpy, :] == 128):
-            y = tmpy
-            break
-    print(x, y)
-    return x, y
-
-
 def human_play():
-    env = tetris_engine([Block_Type.O])
+    env = tetris_engine()
     game_state = env.reset()
     debug_img = None
     is_end = False
     while True:
         img = create_image_from_state(game_state)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        print(img.shape, img.dtype)
+        print(img)
         cv2.imshow("frame", img)
         if debug_img is not None:
             cv2.imshow("debug", debug_img)

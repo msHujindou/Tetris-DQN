@@ -41,7 +41,7 @@ def ai_play(model_file):
                 action_name = env.action_type_list[action]
                 print(action, action_name, model[game_state_key])
             else:
-                print("State not found, or dead state")
+                print("Q value not set for this state, or state is dead .")
 
         if key == ord("w"):
             # rotate
