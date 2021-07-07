@@ -10,6 +10,10 @@
 5x10, 且仅有山形，episodes设置成5000000，得到的state状态个数为4969649，此model可以消除两行
 请参考 Run71 test_1624534454_2975f794
 
+Run 80 test_1624964465_87c7a779 的训练结果如下：
+局面为 5x10, 且仅有山形俄罗斯方块，episodes设置成18000000，得到的state状态为9908083，
+此model最高可以消除5行，若从头开始的话，最多可以消除4行。
+
 """
 import datetime
 import numpy as np
