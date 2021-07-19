@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class Confs(Enum):
-    row_count = 7
+    row_count = 4
     col_count = 10
     init_value = 128
     blank_value = 0

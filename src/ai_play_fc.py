@@ -12,16 +12,17 @@ from game.tetris_engine import tetris_engine
 
 
 def ai_play(model_file):
-    model = DQN_FC(Confs.row_count.value, Confs.col_count.value, 4)
-    model.load_state_dict(torch.load(model_file))
-    model.eval()
-    env = tetris_engine([Block_Type.O])
+    # model = DQN_FC(Confs.row_count.value, Confs.col_count.value, 4)
+    # model.load_state_dict(torch.load(model_file))
+    # model.eval()
+    env = tetris_engine()
     game_state = env.reset()
     debug_img = None
     is_end = False
     while True:
         img = create_image_from_state(game_state)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        print(game_state)
         cv2.imshow("frame", img)
         if debug_img is not None:
             cv2.imshow("debug", debug_img)
@@ -34,9 +35,9 @@ def ai_play(model_file):
             continue
 
         tensor = torch.from_numpy(game_state.flatten()).float().unsqueeze(0)
-        pred_q = model(tensor)
+        # pred_q = model(tensor)
         # print("##############")
-        print(pred_q)
+        # print(pred_q)
         # print(pred_q.data)
         # print(pred_q.data.max(1))
         # print(pred_q.data.max(1)[1])
@@ -58,9 +59,9 @@ def ai_play(model_file):
         # else:
         #     raise Exception("Error prediction")
 
-        # print(
-        #     f"left max step is {env.test_step(Action_Type.Left)} , right max step is {env.test_step(Action_Type.Right)} , down max step is {env.test_step(Action_Type.Down)} , rotate max step is {env.test_step(Action_Type.Rotate)}"
-        # )
+        print(
+            f"left max step is {env.test_step(Action_Type.Left)} , right max step is {env.test_step(Action_Type.Right)} , down max step is {env.test_step(Action_Type.Down)} , rotate max step is {env.test_step(Action_Type.Rotate)}"
+        )
 
         if key == ord("w"):
             # rotate

@@ -38,7 +38,7 @@ class tetromino:
         )
         imaginary_game_state = (
             board_state
-            + calc_state[1 : Confs.row_count.value + 1, 2 : Confs.col_count.value + 2]
+            + calc_state[: Confs.row_count.value + 1, 2 : Confs.col_count.value + 2]
         )
         return imaginary_game_state
 
@@ -114,7 +114,7 @@ class tetromino:
 
         imaginary_game_state = (
             board_state
-            + calc_state[1 : Confs.row_count.value + 1, 2 : Confs.col_count.value + 2]
+            + calc_state[: Confs.row_count.value + 1, 2 : Confs.col_count.value + 2]
         )
         # 往下移动的时候，被别的方块挡住了，这个方块死掉，生成一个新的方块
         if np.any(
@@ -152,7 +152,7 @@ class tetromino:
             return False, tmppoint, calc_state
         imaginary_game_state = (
             board_state
-            + calc_state[1 : Confs.row_count.value + 1, 2 : Confs.col_count.value + 2]
+            + calc_state[: Confs.row_count.value + 1, 2 : Confs.col_count.value + 2]
         )
         # 判断左边是否有障碍物
         if np.any(
@@ -184,7 +184,7 @@ class tetromino:
             return False, tmppoint, calc_state
         imaginary_game_state = (
             board_state
-            + calc_state[1 : Confs.row_count.value + 1, 2 : Confs.col_count.value + 2]
+            + calc_state[: Confs.row_count.value + 1, 2 : Confs.col_count.value + 2]
         )
         # 判断右边是否有障碍物
         if np.any(
@@ -207,7 +207,7 @@ class tetromino:
 
         imaginary_game_state = (
             board_state
-            + calc_state[1 : Confs.row_count.value + 1, 2 : Confs.col_count.value + 2]
+            + calc_state[0 : Confs.row_count.value + 1, 2 : Confs.col_count.value + 2]
         )
         # 往下移动的时候，被别的方块挡住了，这个方块死掉，生成一个新的方块
         if np.any(
@@ -278,7 +278,7 @@ class tetromino:
             return False, tmprotate, calc_state
         imaginary_game_state = (
             board_state
-            + calc_state[1 : Confs.row_count.value + 1, 2 : Confs.col_count.value + 2]
+            + calc_state[: Confs.row_count.value + 1, 2 : Confs.col_count.value + 2]
         )
         if np.any(
             imaginary_game_state == Confs.init_value.value + Confs.solid_value.value

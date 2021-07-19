@@ -41,7 +41,7 @@ class tetris_engine:
 
     def reset(self):
         self.board_state = np.zeros(
-            (Confs.row_count.value, Confs.col_count.value), np.ubyte
+            (Confs.row_count.value + 1, Confs.col_count.value), np.ubyte
         )
         self.tetromino_block = tetromino(
             self.tetromino_type_list[int(np.random.randint(0, self.max_random_index))]
@@ -79,8 +79,8 @@ class tetris_engine:
             0 : Confs.row_count.value + 1, 2 : Confs.col_count.value + 2
         ]
 
-        res_board = virtual_state
-        res_board[1:, :] = board_state + virtual_state[1:, :]
+        # res_board = virtual_state
+        res_board = board_state + virtual_state
 
         cp_dst = np.zeros((Confs.row_count.value + 1, Confs.col_count.value), np.ubyte)
         cp_idx = 0
@@ -112,14 +112,14 @@ class tetris_engine:
             return (
                 game_stop_flag,
                 clear_line_count,
-                cp_dst[1:, :],
+                cp_dst,
                 cp_dst,
             )
 
         tmp_block = self.create_new_block()
 
         # 检查此随机生成的方块能否放在局面上
-        tmp_game_state = tmp_block.draw(cp_dst[1:, :])
+        tmp_game_state = tmp_block.draw(cp_dst)
 
         # 检查新生成的方块是否和死掉的方块有重合
         if np.any(tmp_game_state == Confs.init_value.value + Confs.solid_value.value):
@@ -128,11 +128,11 @@ class tetris_engine:
             return (
                 game_stop_flag,
                 clear_line_count,
-                cp_dst[1:, :],
+                cp_dst,
                 tmp_game_state,
             )
 
-        self.board_state = np.copy(cp_dst[1:, :])
+        self.board_state = np.copy(cp_dst)
         self.tetromino_block = tmp_block
 
         return (

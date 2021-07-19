@@ -1,10 +1,12 @@
 """
-根据train_dqn8的训练结果，此脚本的目的验证把训练样本减少4倍后的训练结果，
-是否和train_dqn8的训练结果一致。
+基于train_dqn9，添加如下更改：
+1. 训练由state转换成灰色图片
+2. 局面由 20x10 变为 21x10
+3. 因为内存有限，batch设置成2048就能导致16G机器崩溃
+4. 因为内存有限，每个进程的局数也没法设置高
 
-Run 49 test_1624243842_0fa9be3e的训练结果显示
-把episodes_total由200000减少至50000，model的精度迅速降低
-和train_dqn8的结果差不多
+将episode设置成200000，训练了160+小时，仍然没有出结果，改成20000
+将MAX_Batch_Size设置成128，会出现内存不够错误
 
 """
 import os
@@ -23,8 +25,8 @@ import multiprocessing as mp
 
 from utils.util import create_image_from_state
 
-MAX_Batch_Size = 512
-Replay_Capacity = 512 * 2
+MAX_Batch_Size = 64
+Replay_Capacity = 64
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -55,8 +57,8 @@ class ReplayMemory(object):
 
 memory = ReplayMemory(Replay_Capacity)
 
-episodes_total = 200000
-episodes_each_process = 10
+episodes_total = 10000
+episodes_each_process = 5
 
 
 def convert_state_to_image(p_state):

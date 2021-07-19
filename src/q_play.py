@@ -19,7 +19,7 @@ def ai_play(model_file):
     is_end = False
     while True:
         img = create_image_from_state(game_state)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         cv2.imshow("frame", img)
         if debug_img is not None:
             cv2.imshow("debug", debug_img)
@@ -83,5 +83,5 @@ def ai_play(model_file):
 
 if __name__ == "__main__":
     # human_play()
-    ai_play("outputs/q_18000000.json")
+    ai_play("outputs/q_36000000.json")
     sys.exit(0)

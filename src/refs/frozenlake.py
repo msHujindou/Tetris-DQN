@@ -42,7 +42,7 @@ class FrozenLake:
         """
         Initializes the gym environment
         """
-        self.env = gym.make(env)
+        self.env = gym.make(env, is_slippery=True)
 
         self.action_space = self.env.action_space.n
         self.state_size = self.env.observation_space.n
@@ -55,7 +55,7 @@ class FrozenLake:
         """
         self.qtable = np.zeros((self.state_size, self.action_space))
 
-    def train(self, episodes=15000, steps=99, epsilon=1.0):
+    def train(self, episodes=2500, steps=99, epsilon=1.0):
         """
         Selects actions for the agent to take in given
         states and updates the Q table
@@ -105,7 +105,7 @@ class FrozenLake:
 
         print("\nScore: ", np.sum(rewards) / episodes)
 
-    def play(self, episodes=50, steps=99):
+    def play(self, episodes=10, steps=99):
         """
         Plays FrozenLake with the trained agent
         """
@@ -138,4 +138,5 @@ class FrozenLake:
 
 fl = FrozenLake()
 fl.train()
+print(fl.qtable)
 fl.play()

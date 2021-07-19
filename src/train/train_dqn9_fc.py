@@ -9,13 +9,12 @@ import os
 import datetime
 from collections import namedtuple
 import random
-import numpy as np
+
 import torch
 import torch.nn as nn
 from game.confs import Action_Type, Confs
 from game.tetris_engine import tetris_engine
 
-from model.cnn_model import DQN
 import multiprocessing as mp
 
 from model.fc_model import DQN_FC
@@ -52,7 +51,7 @@ class ReplayMemory(object):
 
 memory = ReplayMemory(Replay_Capacity)
 
-episodes_total = 200000
+episodes_total = 400000
 episodes_each_process = 100
 
 
@@ -79,7 +78,7 @@ def sample_data(p_episodes):
 def train_DQN():
     cpu_count = mp.cpu_count()
 
-    model = DQN_FC(Confs.row_count.value, Confs.col_count.value, 4)
+    model = DQN_FC(Confs.row_count.value + 1, Confs.col_count.value, 4)
     loss_fn = nn.SmoothL1Loss()
     opt = torch.optim.RMSprop(model.parameters())
 

@@ -31,7 +31,7 @@ def train_Q_function():
     epsilon = 1.0
     qtable = {}
 
-    episodes = 18000000
+    episodes = 36000000
 
     conf_last_episode = 0.5
     decay_rate = -np.log((conf_last_episode - min_eps) / (max_eps - min_eps)) / episodes
