@@ -146,7 +146,6 @@ def train_DQN():
 
                         if random.random() < 0.01:
                             print("#### Current Datetime:", datetime.datetime.now())
-                            print(state_batch)
                             print(reward_batch)
                             print(state_action_values)
 

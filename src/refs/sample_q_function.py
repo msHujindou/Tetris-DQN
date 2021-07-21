@@ -128,7 +128,7 @@ class game:
 # env.render()
 # env.close()
 
-total_episode = 80000
+total_episode = 80
 
 
 class FrozenLake:
@@ -228,12 +228,14 @@ class FrozenLake:
                 #     print(f"[{new_state}],[{reward}],[{done}],[{_}]")
 
                 # Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
-                # if new_state != state:
-                self.qtable[state, action] = self.qtable[state, action] + self.lr * (
-                    reward
-                    + self.gamma * np.amax(self.qtable[new_state, :])
-                    - self.qtable[state, action]
-                )
+                if new_state != state:
+                    self.qtable[state, action] = self.qtable[
+                        state, action
+                    ] + self.lr * (
+                        reward
+                        + self.gamma * np.amax(self.qtable[new_state, :])
+                        - self.qtable[state, action]
+                    )
 
                 total_reward += reward
                 state = new_state

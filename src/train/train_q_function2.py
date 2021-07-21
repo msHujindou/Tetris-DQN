@@ -14,6 +14,14 @@ Run 80 test_1624964465_87c7a779 的训练结果如下：
 局面为 5x10, 且仅有山形俄罗斯方块，episodes设置成18000000，得到的state状态为9908083，
 此model最高可以消除5行，若从头开始的话，最多可以消除4行。
 
+Run 100 test_1626697201_bdce3930 的训练结果如下：
+局面为 4x10, 仅有L型俄罗斯方块, episodes设置成36000000, 得到的state状态总数为1653310,
+此model最高可以消除4行，若从头开始，最多可以消除3行。
+
+总结原因：
+4x10 仅有L型俄罗斯方块，的的确确存在数种无限循环，但每次所有方块都消除完后，
+总会回归到那个初始状态，但消除行数的reward机制会促使避开无限循环
+
 """
 import datetime
 import numpy as np
@@ -65,11 +73,12 @@ def train_Q_function():
                 action, action_name = env.select_random_step()
 
             new_state, reward, done, debug = env.step(action_name)
-            new_state_key = new_state.tobytes().hex()
 
             if done:
                 # 此局游戏结束
                 break
+
+            new_state_key = new_state.tobytes().hex()
 
             total_reward_each_episode += reward
 
@@ -78,11 +87,14 @@ def train_Q_function():
                 qtable[game_state_key] = [0] * env.action_space
             if new_state_key not in qtable:
                 qtable[new_state_key] = [0] * env.action_space
-            qtable[game_state_key][action] = qtable[game_state_key][action] + lr * (
-                reward
-                + gamma * np.amax(qtable[new_state_key])
-                - qtable[game_state_key][action]
-            )
+
+            # 对于无效的移动，不更新其Q value会使生成的Q table更健壮
+            if new_state_key != game_state_key:
+                qtable[game_state_key][action] = qtable[game_state_key][action] + lr * (
+                    reward
+                    + gamma * np.amax(qtable[new_state_key])
+                    - qtable[game_state_key][action]
+                )
 
             game_state = new_state
             game_state_key = game_state.tobytes().hex()

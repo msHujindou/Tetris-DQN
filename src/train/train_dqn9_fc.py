@@ -93,12 +93,12 @@ def train_DQN():
     mp.set_start_method("spawn")
 
     with mp.Pool(processes=cpu_count) as pool:
-        for _ in range(episodes_total // (cpu_count * episodes_each_process)):
+        for itr in range(episodes_total // (cpu_count * episodes_each_process)):
             task_list = [episodes_each_process for _ in range(cpu_count)]
             res = pool.map(sample_data, task_list)
 
             for itm_lst in res:
-                if _ <= 0:
+                if itr <= 0:
                     print("#### size of state list is", len(itm_lst))
                     print(itm_lst[0])
 
@@ -132,7 +132,10 @@ def train_DQN():
                         state_action_values = model(state_batch)
 
                         if random.random() < 0.01:
+                            print("")
                             print("#### Current Datetime:", datetime.datetime.now())
+                            print(reward_batch)
+                            print(state_action_values)
 
                         expected_state_action_values = reward_batch
 
@@ -144,6 +147,12 @@ def train_DQN():
                         for param in model.parameters():
                             param.grad.data.clamp_(-1, 1)
                         opt.step()
+
+            if itr % 20 == 19:
+                torch.save(
+                    model.state_dict(),
+                    os.path.join("./outputs/", f"itr_{itr}.pt"),
+                )
 
     filename = f"Tetris_FC_{episodes_total}.pt"
     torch.save(model.state_dict(), os.path.join("./outputs/", filename))
