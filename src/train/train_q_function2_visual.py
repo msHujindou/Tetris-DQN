@@ -237,7 +237,7 @@ def sample():
                 tmplist = act_list.copy()
             else:
                 tmplist = act_list_not_finite.copy()
-        key = cv2.waitKey(10)
+        key = cv2.waitKey(1)
 
         # press Q or ESC
         if key == ord("q") or key == 27:
@@ -390,7 +390,7 @@ def visual_train():
         cv2.imshow("frame", img)
         if debug_img is not None:
             cv2.imshow("debug", debug_img)
-        key = cv2.waitKey(10)
+        key = cv2.waitKey(20)
         # press Q or ESC
         if key == ord("q") or key == 27:
             break
@@ -427,7 +427,8 @@ def visual_train():
             # print(np.array(list(qtable.values())))
             action_list.append(2)
             game_state = new_state
-            print(game_state)
+            # print(game_state)
+            print(reward)
         elif key == ord("s"):
             # down
             new_state, reward, is_end, debug = env.step(Action_Type.Down)
@@ -449,7 +450,8 @@ def visual_train():
             # print(np.array(list(qtable.values())))
             action_list.append(3)
             game_state = new_state
-            print(game_state)
+            # print(game_state)
+            print(reward)
         elif key == ord("a"):
             # left
             new_state, reward, is_end, debug = env.step(Action_Type.Left)
@@ -471,6 +473,7 @@ def visual_train():
             # print(np.array(list(qtable.values())))
             action_list.append(0)
             game_state = new_state
+            print(reward)
         elif key == ord("d"):
             # right
             new_state, reward, is_end, debug = env.step(Action_Type.Right)
@@ -492,6 +495,7 @@ def visual_train():
             # print(np.array(list(qtable.values())))
             action_list.append(1)
             game_state = new_state
+            print(reward)
         elif key == ord(" "):
             # bottom
             game_state, reward, is_end, debug = env.step(Action_Type.Bottom)

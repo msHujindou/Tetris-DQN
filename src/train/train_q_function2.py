@@ -22,6 +22,11 @@ Run 100 test_1626697201_bdce3930 的训练结果如下：
 4x10 仅有L型俄罗斯方块，的的确确存在数种无限循环，但每次所有方块都消除完后，
 总会回归到那个初始状态，但消除行数的reward机制会促使避开无限循环
 
+Run 104 test_1626872101_802234c6 的训练结果如下：
+无论是否添加惩罚不可能的操作
+4x10 仅有L型俄罗斯方块，训练出来的model，除了最后一列有负数数值，其余皆为0，此model完全不可用
+
+
 """
 import datetime
 import numpy as np
@@ -64,11 +69,11 @@ def train_Q_function():
                 if game_state_key not in qtable:
                     qtable[game_state_key] = [0] * env.action_space
                 # 某些状态下某些操作是被禁止的，比如靠近边界后的旋转，这个时候需要随机选择一个action
-                if np.max(qtable[game_state_key]) > 0:
+                if np.all(qtable[game_state_key] == 0):
+                    action, action_name = env.select_random_step()
+                else:
                     action = np.argmax(qtable[game_state_key])
                     action_name = env.action_type_list[action]
-                else:
-                    action, action_name = env.select_random_step()
             else:
                 action, action_name = env.select_random_step()
 
