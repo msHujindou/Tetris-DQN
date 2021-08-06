@@ -573,7 +573,7 @@ class tetris_engine:
                         cleared_lines,
                         game_state,
                         debug,
-                    ) = self.proc_when_block_dead(self.board_state)
+                    ) = self.proc_when_block_dead2(self.board_state)
                     return (
                         game_state,
                         cleared_lines * Confs.each_line_reward.value,
@@ -613,7 +613,7 @@ class tetris_engine:
                         cleared_lines,
                         game_state,
                         debug,
-                    ) = self.proc_when_block_dead(self.board_state)
+                    ) = self.proc_when_block_dead2(self.board_state)
                     return (
                         game_state,
                         cleared_lines * Confs.each_line_reward.value,
@@ -651,7 +651,7 @@ class tetris_engine:
                         cleared_lines,
                         game_state,
                         debug,
-                    ) = self.proc_when_block_dead(self.board_state)
+                    ) = self.proc_when_block_dead2(self.board_state)
                     return (
                         game_state,
                         cleared_lines * Confs.each_line_reward.value,

@@ -23,6 +23,13 @@ Run 82 test_1625030677_d44e4e87 的结果表明
 Run 89 test_1625129311_4d2cd398 的结果表明
 7x10局面，且仅有田字形的俄罗斯方块，episode设置成8000000, 非 double dqn，训练出来的model完全没法用
 但比double dqn训练出来的稍微好一点，移动俄罗斯方块时predicition value至少能变化
+
+Run 106 test_1627873129_40374f63 的结果表明
+20x10局面，且仅有田字形的俄罗斯方块，double dqn，训练出来的model会使俄罗斯方块左右无限震荡
+
+Run 107 test_1628158554_526b377a 的结果表明
+20x10局面，且仅有田字形的俄罗斯方块，double dqn，训练出来的model无法消除哪怕一行
+
 """
 import os
 import datetime
@@ -69,12 +76,20 @@ class ReplayMemory(object):
 
 memory = ReplayMemory(Replay_Capacity)
 
-episodes_total = 8000000
+episodes_total = 1000000
 episodes_each_process = 100
 
 
 def sample_data(p_episodes):
-    env = tetris_engine([Block_Type.O])
+    env = tetris_engine(
+        [Block_Type.O],
+        [
+            Action_Type.Left_Down,
+            Action_Type.Right_Down,
+            Action_Type.Rotate_Down,
+            Action_Type.Down,
+        ],
+    )
     res = []
     for _ in range(p_episodes):
         game_state = env.reset()
@@ -93,9 +108,9 @@ def train_DQN():
     gamma = 0.95
     cpu_count = mp.cpu_count()
 
-    model = DQN(Confs.row_count.value, Confs.col_count.value, 4)
+    model = DQN(Confs.row_count.value + 1, Confs.col_count.value, 4)
     # 加入 double DQN 结构
-    target_net = DQN(Confs.row_count.value, Confs.col_count.value, 4)
+    target_net = DQN(Confs.row_count.value + 1, Confs.col_count.value, 4)
     target_net.load_state_dict(model.state_dict())
     target_net.eval()
 
@@ -118,22 +133,23 @@ def train_DQN():
             res = pool.map(sample_data, task_list)
 
             for itm_lst in res:
-                if _ <= 0:
-                    print("#### size of state list is", len(itm_lst))
-                    tmpidx = -1
-                    for tmpitem in itm_lst:
-                        tmpidx += 1
-                        if tmpitem[3] > 0:
-                            print(itm_lst[tmpidx - 1][0])
-                            print("action :", itm_lst[tmpidx - 1][1])
-                            print(itm_lst[tmpidx - 1][2])
-                            print("reward :", itm_lst[tmpidx - 1][3])
-                            print("----")
-                            print(tmpitem[0])
-                            print("action :", tmpitem[1])
-                            print(tmpitem[2])
-                            print("reward :", tmpitem[3])
-                            break
+                # there's no need print debug information
+                # if _ <= 0:
+                #     print("#### size of state list is", len(itm_lst))
+                #     tmpidx = -1
+                #     for tmpitem in itm_lst:
+                #         tmpidx += 1
+                #         if tmpitem[3] > 0:
+                #             print(itm_lst[tmpidx - 1][0])
+                #             print("action :", itm_lst[tmpidx - 1][1])
+                #             print(itm_lst[tmpidx - 1][2])
+                #             print("reward :", itm_lst[tmpidx - 1][3])
+                #             print("----")
+                #             print(tmpitem[0])
+                #             print("action :", tmpitem[1])
+                #             print(tmpitem[2])
+                #             print("reward :", tmpitem[3])
+                #             break
 
                 for itm in itm_lst:
                     memory.push(itm[0], itm[1], itm[2], itm[3])
@@ -183,7 +199,10 @@ def train_DQN():
                             next_state_batch_list.append(ts)
                         non_final_next_states = torch.cat(next_state_batch_list)
                         next_state_values = (
-                            model(non_final_next_states).max(1)[0].detach().unsqueeze(1)
+                            target_net(non_final_next_states)
+                            .max(1)[0]
+                            .detach()
+                            .unsqueeze(1)
                         )
                         expected_state_action_values = (
                             next_state_values * gamma + reward_batch
@@ -191,22 +210,24 @@ def train_DQN():
 
                         if random.random() < 0.01:
                             print("#### Current Datetime:", datetime.datetime.now())
-                            print(
-                                "expect : max value ",
-                                torch.max(expected_state_action_values),
-                            )
-                            print(
-                                "expect : avg value ",
-                                torch.mean(expected_state_action_values),
-                            )
-                            print(
-                                "predict : max value ",
-                                torch.max(state_action_values),
-                            )
-                            print(
-                                "predict : avg value ",
-                                torch.mean(state_action_values),
-                            )
+                            print(state_action_values)
+                            print(expected_state_action_values)
+                            # print(
+                            #     "expect : max value ",
+                            #     torch.max(expected_state_action_values),
+                            # )
+                            # print(
+                            #     "expect : avg value ",
+                            #     torch.mean(expected_state_action_values),
+                            # )
+                            # print(
+                            #     "predict : max value ",
+                            #     torch.max(state_action_values),
+                            # )
+                            # print(
+                            #     "predict : avg value ",
+                            #     torch.mean(state_action_values),
+                            # )
 
                         l = loss_fn(state_action_values, expected_state_action_values)
                         opt.zero_grad()

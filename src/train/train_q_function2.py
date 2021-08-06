@@ -26,6 +26,8 @@ Run 104 test_1626872101_802234c6 的训练结果如下：
 无论是否添加惩罚不可能的操作
 4x10 仅有L型俄罗斯方块，训练出来的model，除了最后一列有负数数值，其余皆为0，此model完全不可用
 
+Run 105 test_1627623453_d10a9e2c 的训练结果如下：
+4x10 仅有L型俄罗斯方块，训练出来的model，完全没法用，每个状态的4个action的reward值接近负无穷大
 
 """
 import datetime
@@ -33,6 +35,8 @@ import numpy as np
 import json
 from game.confs import Block_Type
 from game.tetris_engine import tetris_engine
+
+q_table_init_value = -1000.0
 
 
 def train_Q_function():
@@ -44,7 +48,7 @@ def train_Q_function():
     epsilon = 1.0
     qtable = {}
 
-    episodes = 36000000
+    episodes = 3600000
 
     conf_last_episode = 0.5
     decay_rate = -np.log((conf_last_episode - min_eps) / (max_eps - min_eps)) / episodes
@@ -67,9 +71,9 @@ def train_Q_function():
             explore_exploit_tradeoff = np.random.uniform()
             if explore_exploit_tradeoff > epsilon:
                 if game_state_key not in qtable:
-                    qtable[game_state_key] = [0] * env.action_space
+                    qtable[game_state_key] = [q_table_init_value] * env.action_space
                 # 某些状态下某些操作是被禁止的，比如靠近边界后的旋转，这个时候需要随机选择一个action
-                if np.all(qtable[game_state_key] == 0):
+                if np.all(qtable[game_state_key] == q_table_init_value):
                     action, action_name = env.select_random_step()
                 else:
                     action = np.argmax(qtable[game_state_key])
@@ -89,9 +93,9 @@ def train_Q_function():
 
             # Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
             if game_state_key not in qtable:
-                qtable[game_state_key] = [0] * env.action_space
+                qtable[game_state_key] = [q_table_init_value] * env.action_space
             if new_state_key not in qtable:
-                qtable[new_state_key] = [0] * env.action_space
+                qtable[new_state_key] = [q_table_init_value] * env.action_space
 
             # 对于无效的移动，不更新其Q value会使生成的Q table更健壮
             if new_state_key != game_state_key:

@@ -11,7 +11,7 @@ from game.tetris_engine import tetris_engine
 
 
 def ai_play(model_file):
-    model = DQN(Confs.row_count.value, Confs.col_count.value, 4)
+    model = DQN(Confs.row_count.value + 1, Confs.col_count.value, 4)
     model.load_state_dict(torch.load(model_file))
     model.eval()
     env = tetris_engine([Block_Type.O])
@@ -24,7 +24,7 @@ def ai_play(model_file):
         cv2.imshow("frame", img)
         if debug_img is not None:
             cv2.imshow("debug", debug_img)
-        key = cv2.waitKey(10)
+        key = cv2.waitKey(20)
         # press Q or ESC
         if key == ord("q") or key == 27:
             break
@@ -38,27 +38,26 @@ def ai_play(model_file):
         tensor = tensor.float()
         pred_q = model(tensor)
         # print("##############")
-        print(pred_q)
         # print(pred_q.data)
         # print(pred_q.data.max(1))
         # print(pred_q.data.max(1)[1])
         # print(pred_q.data.max(1)[1].view(1, 1))
         # print(pred_q.data.max(1)[1].item())
-        # select_idx = pred_q.data.max(1)[1].item()
-        # if select_idx == 0:
-        #     k = ord("a")
-        #     print("Model suggest left action")
-        # elif select_idx == 1:
-        #     k = ord("d")
-        #     print("Model suggest right action")
-        # elif select_idx == 2:
-        #     k = ord("w")
-        #     print("Model suggest rotate action")
-        # elif select_idx == 3:
-        #     k = ord("s")
-        #     print("Model suggest down action")
-        # else:
-        #     raise Exception("Error prediction")
+        select_idx = pred_q.data.max(1)[1].item()
+        if select_idx == 0:
+            # key = ord("a")
+            print("left", pred_q.data)
+        elif select_idx == 1:
+            # key = ord("d")
+            print("right", pred_q.data)
+        elif select_idx == 2:
+            # key = ord("w")
+            print("rotate", pred_q.data)
+        elif select_idx == 3:
+            # key = ord("s")
+            print("down", pred_q.data)
+        else:
+            raise Exception("Error prediction")
 
         # print(
         #     f"left max step is {env.test_step(Action_Type.Left)} , right max step is {env.test_step(Action_Type.Right)} , down max step is {env.test_step(Action_Type.Down)} , rotate max step is {env.test_step(Action_Type.Rotate)}"
@@ -66,7 +65,7 @@ def ai_play(model_file):
 
         if key == ord("w"):
             # rotate
-            game_state, reward, is_end, debug = env.step(Action_Type.Rotate)
+            game_state, reward, is_end, debug = env.step(Action_Type.Rotate_Down)
             # print(f"reward [{reward}], is_end [{is_end}]")
             if debug is not None:
                 debug_img = create_image_from_state(debug)
@@ -80,14 +79,14 @@ def ai_play(model_file):
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
         elif key == ord("a"):
             # left
-            game_state, reward, is_end, debug = env.step(Action_Type.Left)
+            game_state, reward, is_end, debug = env.step(Action_Type.Left_Down)
             # print(f"reward [{reward}], is_end [{is_end}]")
             if debug is not None:
                 debug_img = create_image_from_state(debug)
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
         elif key == ord("d"):
             # right
-            game_state, reward, is_end, debug = env.step(Action_Type.Right)
+            game_state, reward, is_end, debug = env.step(Action_Type.Right_Down)
             # print(f"reward [{reward}], is_end [{is_end}]")
             if debug is not None:
                 debug_img = create_image_from_state(debug)
@@ -104,5 +103,5 @@ def ai_play(model_file):
 
 if __name__ == "__main__":
     # human_play()
-    ai_play("outputs/Tetris_8000000.pt")
+    ai_play("outputs/Tetris_1000000 (1).pt")
     sys.exit(0)

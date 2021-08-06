@@ -2,12 +2,12 @@ from enum import Enum
 
 
 class Confs(Enum):
-    row_count = 20
+    row_count = 7
     col_count = 10
     init_value = 128
     blank_value = 0
     solid_value = 1
-    operation_not_allowed_reward = -100.0
+    operation_not_allowed_reward = -10000.0
     move_left_no_line_cleared_reward = 0.0
     move_right_no_line_cleared_reward = 0.0
     rotate_no_line_cleared_reward = 0.0

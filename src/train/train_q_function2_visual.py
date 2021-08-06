@@ -20,6 +20,7 @@ import json
 import numpy as np
 
 action_list = []
+state_init_value = -10000.0
 
 
 def sample():
@@ -268,7 +269,7 @@ def sample():
 
         game_state_key = game_state.tobytes().hex()
         if game_state_key not in qtable:
-            qtable[game_state_key] = [0] * env.action_space
+            qtable[game_state_key] = [state_init_value] * env.action_space
 
         if key == ord("w"):
             # rotate
@@ -280,7 +281,7 @@ def sample():
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
             # Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
             if new_state_key not in qtable:
-                qtable[new_state_key] = [0] * env.action_space
+                qtable[new_state_key] = [state_init_value] * env.action_space
             # 对于无效的移动，不更新其Q value会使生成的Q table更健壮
             if new_state_key != game_state_key:
                 qtable[game_state_key][2] = qtable[game_state_key][2] + lr * (
@@ -303,7 +304,7 @@ def sample():
                 qtable[game_state_key][3] = -100
             else:
                 if new_state_key not in qtable:
-                    qtable[new_state_key] = [0] * env.action_space
+                    qtable[new_state_key] = [state_init_value] * env.action_space
                 # 对于无效的移动，不更新其Q value会使生成的Q table更健壮
                 if new_state_key != game_state_key:
                     qtable[game_state_key][3] = qtable[game_state_key][3] + lr * (
@@ -323,7 +324,7 @@ def sample():
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
             # Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
             if new_state_key not in qtable:
-                qtable[new_state_key] = [0] * env.action_space
+                qtable[new_state_key] = [state_init_value] * env.action_space
             # 对于无效的移动，不更新其Q value会使生成的Q table更健壮
             if new_state_key != game_state_key:
                 qtable[game_state_key][0] = qtable[game_state_key][0] + lr * (
@@ -343,7 +344,7 @@ def sample():
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
             # Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
             if new_state_key not in qtable:
-                qtable[new_state_key] = [0] * env.action_space
+                qtable[new_state_key] = [state_init_value] * env.action_space
             # 对于无效的移动，不更新其Q value会使生成的Q table更健壮
             if new_state_key != game_state_key:
                 qtable[game_state_key][1] = qtable[game_state_key][1] + lr * (
@@ -404,7 +405,7 @@ def visual_train():
 
         game_state_key = game_state.tobytes().hex()
         if game_state_key not in qtable:
-            qtable[game_state_key] = [0] * env.action_space
+            qtable[game_state_key] = [state_init_value] * env.action_space
 
         if key == ord("w"):
             # rotate
@@ -416,9 +417,19 @@ def visual_train():
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
             # Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
             if new_state_key not in qtable:
-                qtable[new_state_key] = [0] * env.action_space
+                qtable[new_state_key] = [state_init_value] * env.action_space
             # 对于无效的移动，不更新其Q value会使生成的Q table更健壮
             if new_state_key != game_state_key:
+                print(
+                    reward,
+                    qtable[game_state_key][2]
+                    + lr
+                    * (
+                        reward
+                        + gamma * np.amax(qtable[new_state_key])
+                        - qtable[game_state_key][2]
+                    ),
+                )
                 qtable[game_state_key][2] = qtable[game_state_key][2] + lr * (
                     reward
                     + gamma * np.amax(qtable[new_state_key])
@@ -428,7 +439,6 @@ def visual_train():
             action_list.append(2)
             game_state = new_state
             # print(game_state)
-            print(reward)
         elif key == ord("s"):
             # down
             new_state, reward, is_end, debug = env.step(Action_Type.Down)
@@ -437,21 +447,31 @@ def visual_train():
             if debug is not None:
                 debug_img = create_image_from_state(debug)
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
-            # Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
-            if new_state_key not in qtable:
-                qtable[new_state_key] = [0] * env.action_space
-            # 对于无效的移动，不更新其Q value会使生成的Q table更健壮
-            if new_state_key != game_state_key:
-                qtable[game_state_key][3] = qtable[game_state_key][3] + lr * (
-                    reward
-                    + gamma * np.amax(qtable[new_state_key])
-                    - qtable[game_state_key][3]
-                )
+            if not is_end:
+                # Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
+                if new_state_key not in qtable:
+                    qtable[new_state_key] = [state_init_value] * env.action_space
+                # 对于无效的移动，不更新其Q value会使生成的Q table更健壮
+                if new_state_key != game_state_key:
+                    print(
+                        reward,
+                        qtable[game_state_key][3]
+                        + lr
+                        * (
+                            reward
+                            + gamma * np.amax(qtable[new_state_key])
+                            - qtable[game_state_key][3]
+                        ),
+                    )
+                    qtable[game_state_key][3] = qtable[game_state_key][3] + lr * (
+                        reward
+                        + gamma * np.amax(qtable[new_state_key])
+                        - qtable[game_state_key][3]
+                    )
             # print(np.array(list(qtable.values())))
             action_list.append(3)
             game_state = new_state
             # print(game_state)
-            print(reward)
         elif key == ord("a"):
             # left
             new_state, reward, is_end, debug = env.step(Action_Type.Left)
@@ -462,9 +482,19 @@ def visual_train():
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
             # Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
             if new_state_key not in qtable:
-                qtable[new_state_key] = [0] * env.action_space
+                qtable[new_state_key] = [state_init_value] * env.action_space
             # 对于无效的移动，不更新其Q value会使生成的Q table更健壮
             if new_state_key != game_state_key:
+                print(
+                    reward,
+                    qtable[game_state_key][0]
+                    + lr
+                    * (
+                        reward
+                        + gamma * np.amax(qtable[new_state_key])
+                        - qtable[game_state_key][0]
+                    ),
+                )
                 qtable[game_state_key][0] = qtable[game_state_key][0] + lr * (
                     reward
                     + gamma * np.amax(qtable[new_state_key])
@@ -473,7 +503,6 @@ def visual_train():
             # print(np.array(list(qtable.values())))
             action_list.append(0)
             game_state = new_state
-            print(reward)
         elif key == ord("d"):
             # right
             new_state, reward, is_end, debug = env.step(Action_Type.Right)
@@ -484,9 +513,19 @@ def visual_train():
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
             # Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
             if new_state_key not in qtable:
-                qtable[new_state_key] = [0] * env.action_space
+                qtable[new_state_key] = [state_init_value] * env.action_space
             # 对于无效的移动，不更新其Q value会使生成的Q table更健壮
             if new_state_key != game_state_key:
+                print(
+                    reward,
+                    qtable[game_state_key][1]
+                    + lr
+                    * (
+                        reward
+                        + gamma * np.amax(qtable[new_state_key])
+                        - qtable[game_state_key][1]
+                    ),
+                )
                 qtable[game_state_key][1] = qtable[game_state_key][1] + lr * (
                     reward
                     + gamma * np.amax(qtable[new_state_key])
@@ -495,7 +534,6 @@ def visual_train():
             # print(np.array(list(qtable.values())))
             action_list.append(1)
             game_state = new_state
-            print(reward)
         elif key == ord(" "):
             # bottom
             game_state, reward, is_end, debug = env.step(Action_Type.Bottom)
@@ -505,6 +543,8 @@ def visual_train():
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
             print(action_list)
             action_list.clear()
+        elif key == ord("i"):
+            print(np.array(list(qtable.values())))
     cv2.destroyAllWindows()
 
 

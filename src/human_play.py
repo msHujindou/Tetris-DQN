@@ -6,15 +6,15 @@ from utils.util import create_image_from_state
 
 
 def human_play():
-    env = tetris_engine()
+    env = tetris_engine([Block_Type.O])
     game_state = env.reset()
     debug_img = None
     is_end = False
     while True:
         img = create_image_from_state(game_state)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        print(img.shape, img.dtype)
-        print(img)
+        # print(img.shape, img.dtype)
+        # print(img)
         cv2.imshow("frame", img)
         if debug_img is not None:
             cv2.imshow("debug", debug_img)
@@ -28,7 +28,7 @@ def human_play():
 
         if key == ord("w"):
             # rotate
-            game_state, reward, is_end, debug = env.step(Action_Type.Rotate)
+            game_state, reward, is_end, debug = env.step(Action_Type.Rotate_Down)
             # print(f"reward [{reward}], is_end [{is_end}]")
             if debug is not None:
                 debug_img = create_image_from_state(debug)
@@ -43,14 +43,14 @@ def human_play():
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
         elif key == ord("a"):
             # left
-            game_state, reward, is_end, debug = env.step(Action_Type.Left)
+            game_state, reward, is_end, debug = env.step(Action_Type.Left_Down)
             # print(f"reward [{reward}], is_end [{is_end}]")
             if debug is not None:
                 debug_img = create_image_from_state(debug)
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
         elif key == ord("d"):
             # right
-            game_state, reward, is_end, debug = env.step(Action_Type.Right)
+            game_state, reward, is_end, debug = env.step(Action_Type.Right_Down)
             # print(f"reward [{reward}], is_end [{is_end}]")
             if debug is not None:
                 debug_img = create_image_from_state(debug)
