@@ -88,7 +88,9 @@ episodes_total = 8000000
 episodes_each_process = 100
 
 
-def sample_data(p_episodes):
+def sample_data(p_episodes, eps, p_net):
+    if random.random() < 0.1:
+        print(f"@@@@ pid[{os.getpid()}] p_episodes/eps is {p_episodes}/{eps}")
     env = tetris_engine(
         [Block_Type.O],
         [
@@ -103,7 +105,25 @@ def sample_data(p_episodes):
         game_state = env.reset()
         # 每局游戏最多1600多步
         for _ in range(2000):
-            action_index, action = env.select_random_step()
+            explore_exploit_tradeoff = np.random.uniform()
+            if explore_exploit_tradeoff > eps:
+                with torch.no_grad():
+                    action_index = (
+                        p_net(
+                            torch.from_numpy(game_state)
+                            .unsqueeze(0)
+                            .unsqueeze(0)
+                            .float()
+                        )
+                        .max(1)[1]
+                        .view(1, 1)
+                    )
+                action = env.select_random_step_action(action_index)
+                # print(
+                #     f"@@@@ pid[{os.getpid()}] model prediction used {action_index}/{action}"
+                # )
+            else:
+                action_index, action = env.select_random_step()
             new_state, reward, is_game_end, debug = env.step(action)
             if is_game_end:
                 # add punishment to operations that lead to game end
@@ -118,35 +138,46 @@ def sample_data(p_episodes):
 
 def train_DQN():
     gamma = 0.95
+    min_eps = 0.001
+    max_eps = 1.0
+    conf_last_episode = 0.75
+    epsilon = 1.0
+
     cpu_count = mp.cpu_count()
 
-    model = DQN(Confs.row_count.value + 1, Confs.col_count.value, 3)
+    policy_net = DQN(Confs.row_count.value + 1, Confs.col_count.value, 3)
     # 加入 double DQN 结构
     target_net = DQN(Confs.row_count.value + 1, Confs.col_count.value, 3)
-    target_net.load_state_dict(model.state_dict())
+    target_net.load_state_dict(policy_net.state_dict())
     target_net.eval()
 
     loss_fn = nn.SmoothL1Loss()
-    opt = torch.optim.RMSprop(model.parameters())
+    opt = torch.optim.RMSprop(policy_net.parameters())
 
-    print("############## mp.cpu_count() =", cpu_count)
-    print(
-        "############## iteration count =",
-        episodes_total // (cpu_count * episodes_each_process),
+    total_iteration = episodes_total // (cpu_count * episodes_each_process)
+    decay_rate = (
+        -np.log((conf_last_episode - min_eps) / (max_eps - min_eps)) / total_iteration
     )
-    print("############## Start Training", datetime.datetime.now())
+
+    print("#### mp.cpu_count() =", cpu_count)
+    print("#### iteration count =", total_iteration)
+    print("#### decay_rate =", decay_rate)
+    print("#### Start Training", datetime.datetime.now())
 
     # 如果不设置spawn模式，在Linux环境下同一批次模拟出来的结果，完全一样，
     mp.set_start_method("spawn")
 
     with mp.Pool(processes=cpu_count) as pool:
-        for _ in range(episodes_total // (cpu_count * episodes_each_process)):
-            task_list = [episodes_each_process for _ in range(cpu_count)]
-            res = pool.map(sample_data, task_list)
+        for _ in range(total_iteration):
+            task_list = [
+                (episodes_each_process, epsilon, policy_net) for _ in range(cpu_count)
+            ]
+            res = pool.starmap(sample_data, task_list)
 
             for itm_lst in res:
                 # there's no need print debug information
-                # if _ <= 0:
+                if _ <= 0:
+                    print("---- state list size", len(itm_lst))
                 #     print("#### size of state list is", len(itm_lst))
                 #     tmpidx = -1
                 #     for tmpitem in itm_lst:
@@ -221,7 +252,9 @@ def train_DQN():
                             ]
                         )
 
-                        state_action_values = model(state_batch).gather(1, action_batch)
+                        state_action_values = policy_net(state_batch).gather(
+                            1, action_batch
+                        )
 
                         next_state_values = torch.zeros(BATCH_SIZE)
                         next_state_values[non_final_mask] = (
@@ -244,7 +277,7 @@ def train_DQN():
                         #     expected_state_action_values.unsqueeze(1).shape,
                         # )
 
-                        if random.random() < 0.01:
+                        if random.random() < 0.001:
                             print("#### Current Datetime:", datetime.datetime.now())
                             print(state_action_values)
                             print(expected_state_action_values)
@@ -273,15 +306,17 @@ def train_DQN():
                         l.backward()
 
                         # pytorch 的实例代码里有这么一段
-                        for param in model.parameters():
+                        for param in policy_net.parameters():
                             param.grad.data.clamp_(-1, 1)
                         opt.step()
 
             if _ > 0 and _ % 15 == 0:
-                target_net.load_state_dict(model.state_dict())
+                target_net.load_state_dict(policy_net.state_dict())
+
+            epsilon = min_eps + (max_eps - min_eps) * np.exp(-decay_rate * _)
 
     filename = f"Tetris_{episodes_total}.pt"
-    torch.save(model.state_dict(), os.path.join("./outputs/", filename))
+    torch.save(policy_net.state_dict(), os.path.join("./outputs/", filename))
     print("############## End Training", datetime.datetime.now())
 
 

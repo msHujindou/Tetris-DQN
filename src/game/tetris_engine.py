@@ -39,6 +39,9 @@ class tetris_engine:
         action_index = int(np.random.randint(0, self.action_space))
         return action_index, self.action_type_list[action_index]
 
+    def select_random_step_action(self, action_index):
+        return self.action_type_list[action_index]
+
     def reset(self):
         self.board_state = np.zeros(
             (Confs.row_count.value + 1, Confs.col_count.value), np.ubyte

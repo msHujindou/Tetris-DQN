@@ -32,10 +32,7 @@ def ai_play(model_file):
         if is_end:
             continue
 
-        tensor = torch.from_numpy(game_state)
-        tensor = tensor.unsqueeze(0)
-        tensor = tensor.unsqueeze(0)
-        tensor = tensor.float()
+        tensor = torch.from_numpy(game_state).unsqueeze(0).unsqueeze(0).float()
         pred_q = model(tensor)
         # print("##############")
         # print(pred_q.data)
@@ -45,16 +42,16 @@ def ai_play(model_file):
         # print(pred_q.data.max(1)[1].item())
         select_idx = pred_q.data.max(1)[1].item()
         if select_idx == 0:
-            #key = ord("a")
+            # key = ord("a")
             print("left", pred_q.data)
         elif select_idx == 1:
-            #key = ord("d")
+            # key = ord("d")
             print("right", pred_q.data)
         elif select_idx == 2:
-            #key = ord("w")
+            # key = ord("w")
             print("rotate", pred_q.data)
         elif select_idx == 3:
-            #key = ord("s")
+            # key = ord("s")
             print("down", pred_q.data)
         else:
             raise Exception("Error prediction")
