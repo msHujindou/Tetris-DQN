@@ -381,7 +381,7 @@ def visual_train():
     print(decay_rate)
     print("#### Start training,", datetime.datetime.now())
 
-    env = tetris_engine([Block_Type.L])
+    env = tetris_engine([Block_Type.O])
     game_state = env.reset()
     debug_img = None
     is_end = False
@@ -409,7 +409,7 @@ def visual_train():
 
         if key == ord("w"):
             # rotate
-            new_state, reward, is_end, debug = env.step(Action_Type.Rotate)
+            new_state, reward, is_end, debug = env.step(Action_Type.Rotate_Down)
             new_state_key = new_state.tobytes().hex()
             # print(f"reward [{reward}], is_end [{is_end}]")
             if debug is not None:
@@ -474,7 +474,7 @@ def visual_train():
             # print(game_state)
         elif key == ord("a"):
             # left
-            new_state, reward, is_end, debug = env.step(Action_Type.Left)
+            new_state, reward, is_end, debug = env.step(Action_Type.Left_Down)
             new_state_key = new_state.tobytes().hex()
             # print(f"reward [{reward}], is_end [{is_end}]")
             if debug is not None:
@@ -500,12 +500,14 @@ def visual_train():
                     + gamma * np.amax(qtable[new_state_key])
                     - qtable[game_state_key][0]
                 )
+            else:
+                print("not allowed operation", reward)
             # print(np.array(list(qtable.values())))
             action_list.append(0)
             game_state = new_state
         elif key == ord("d"):
             # right
-            new_state, reward, is_end, debug = env.step(Action_Type.Right)
+            new_state, reward, is_end, debug = env.step(Action_Type.Right_Down)
             new_state_key = new_state.tobytes().hex()
             # print(f"reward [{reward}], is_end [{is_end}]")
             if debug is not None:
@@ -627,5 +629,5 @@ def train_Q_function():
 
 
 if __name__ == "__main__":
-    # visual_train()
-    sample()
+    visual_train()
+    #sample()

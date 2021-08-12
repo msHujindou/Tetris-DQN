@@ -7,11 +7,12 @@ class Confs(Enum):
     init_value = 128
     blank_value = 0
     solid_value = 1
-    operation_not_allowed_reward = -10000.0
+    operation_not_allowed_reward = -100.0
     move_left_no_line_cleared_reward = 0.0
     move_right_no_line_cleared_reward = 0.0
     rotate_no_line_cleared_reward = 0.0
     move_down_no_line_cleared_reward = 0.0
+    game_end_punishment = -500.0
     each_line_reward = 1.0
 
 

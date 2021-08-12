@@ -30,6 +30,14 @@ Run 106 test_1627873129_40374f63 的结果表明
 Run 107 test_1628158554_526b377a 的结果表明
 20x10局面，且仅有田字形的俄罗斯方块，double dqn，训练出来的model无法消除哪怕一行
 
+Run 110,111 的结果：
+7x10，仅有田字型俄罗斯方块，非double dqn训练出来的结果会使俄罗斯方块仅仅往下移动
+double dqn会使俄罗斯方块左右移动，episode设置成4000000仍无法消除一行
+
+Run 112 的结果：
+7x10，仅有田字型俄罗斯方块，double dqn，episode设置成4000000
+把policy_net的更新频率降低后，效果下降
+
 """
 import os
 import datetime
@@ -44,8 +52,8 @@ from game.tetris_engine import tetris_engine
 from model.cnn_model import DQN
 import multiprocessing as mp
 
-MAX_Batch_Size = 51200
-Replay_Capacity = 51200 * 4
+MAX_Batch_Size = 25600
+Replay_Capacity = MAX_Batch_Size * 8
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -76,7 +84,7 @@ class ReplayMemory(object):
 
 memory = ReplayMemory(Replay_Capacity)
 
-episodes_total = 1000000
+episodes_total = 8000000
 episodes_each_process = 100
 
 
@@ -86,7 +94,7 @@ def sample_data(p_episodes):
         [
             Action_Type.Left_Down,
             Action_Type.Right_Down,
-            Action_Type.Rotate_Down,
+            # Action_Type.Rotate_Down,
             Action_Type.Down,
         ],
     )
@@ -96,8 +104,12 @@ def sample_data(p_episodes):
         # 每局游戏最多1600多步
         for _ in range(2000):
             action_index, action = env.select_random_step()
-            new_state, reward, done, debug = env.step(action)
-            if done:
+            new_state, reward, is_game_end, debug = env.step(action)
+            if is_game_end:
+                # add punishment to operations that lead to game end
+                res.append(
+                    (game_state, action_index, None, Confs.game_end_punishment.value)
+                )
                 break
             res.append((game_state, action_index, new_state, reward))
             game_state = new_state
@@ -108,9 +120,9 @@ def train_DQN():
     gamma = 0.95
     cpu_count = mp.cpu_count()
 
-    model = DQN(Confs.row_count.value + 1, Confs.col_count.value, 4)
+    model = DQN(Confs.row_count.value + 1, Confs.col_count.value, 3)
     # 加入 double DQN 结构
-    target_net = DQN(Confs.row_count.value + 1, Confs.col_count.value, 4)
+    target_net = DQN(Confs.row_count.value + 1, Confs.col_count.value, 3)
     target_net.load_state_dict(model.state_dict())
     target_net.eval()
 
@@ -164,49 +176,69 @@ def train_DQN():
                         batch = Transition(*zip(*transitions))
                         memory.added_item_count = 0
 
-                        state_batch_list = []
-                        for tmp_state in batch.state:
-                            ts = torch.from_numpy(tmp_state)
-                            ts = ts.unsqueeze(0)
-                            ts = ts.unsqueeze(0)
-                            ts = ts.float()
-                            state_batch_list.append(ts)
-                        state_batch = torch.cat(state_batch_list)
-
-                        action_batch = torch.tensor(
-                            [[act] for act in batch.action], dtype=torch.int64
+                        non_final_mask = torch.tensor(
+                            tuple(map(lambda s: s is not None, batch.next_state)),
+                            dtype=torch.bool,
+                        )
+                        non_final_next_states = torch.cat(
+                            [
+                                torch.from_numpy(s).unsqueeze(0).unsqueeze(0).float()
+                                for s in batch.next_state
+                                if s is not None
+                            ]
                         )
 
-                        # mx = np.max(batch.reward)
-                        # print("#### max reward", mx)
-                        # print("#### average reward", np.average(batch.reward))
-                        # print("#### count max", np.sum(batch.reward == mx))
-                        # import sys
-                        # sys.exit(0)
+                        # print(non_final_mask)
+                        # print(non_final_mask.size())
+                        # print((non_final_mask == True).sum())
+                        # print((non_final_mask == False).sum())
 
-                        reward_batch = torch.tensor(
-                            [[rwd] for rwd in batch.reward]
-                        ).float()
+                        # below comment come from pytorch DQN example
+                        # state_batch.shape torch.Size([128, 3, 40, 90])
+                        # action_batch.shape torch.Size([128, 1])
+                        # reward_batch.shape torch.Size([128])
+                        # state_action_values.shape torch.Size([128, 1])
+                        # expected_state_action_values.unsqueeze(1).shape torch.Size([128, 1])
+
+                        state_batch = torch.cat(
+                            [
+                                torch.from_numpy(s).unsqueeze(0).unsqueeze(0).float()
+                                for s in batch.state
+                            ]
+                        )
+
+                        action_batch = torch.cat(
+                            [
+                                torch.tensor([[act]], dtype=torch.long)
+                                for act in batch.action
+                            ]
+                        )
+
+                        reward_batch = torch.cat(
+                            [
+                                torch.tensor([rwd], dtype=torch.float)
+                                for rwd in batch.reward
+                            ]
+                        )
 
                         state_action_values = model(state_batch).gather(1, action_batch)
 
-                        next_state_batch_list = []
-                        for tmp_state in batch.next_state:
-                            ts = torch.from_numpy(tmp_state)
-                            ts = ts.unsqueeze(0)
-                            ts = ts.unsqueeze(0)
-                            ts = ts.float()
-                            next_state_batch_list.append(ts)
-                        non_final_next_states = torch.cat(next_state_batch_list)
-                        next_state_values = (
-                            target_net(non_final_next_states)
-                            .max(1)[0]
-                            .detach()
-                            .unsqueeze(1)
+                        next_state_values = torch.zeros(BATCH_SIZE)
+                        next_state_values[non_final_mask] = (
+                            target_net(non_final_next_states).max(1)[0].detach()
                         )
                         expected_state_action_values = (
                             next_state_values * gamma + reward_batch
                         )
+
+                        # print("state_batch.shape", state_batch.shape)
+                        # print("action_batch.shape", action_batch.shape)
+                        # print("reward_batch.shape", reward_batch.shape)
+                        # print("state_action_values.shape", state_action_values.shape)
+                        # print(
+                        #     "expected_state_action_values.unsqueeze(1).shape",
+                        #     expected_state_action_values.unsqueeze(1).shape,
+                        # )
 
                         if random.random() < 0.01:
                             print("#### Current Datetime:", datetime.datetime.now())
@@ -229,7 +261,10 @@ def train_DQN():
                             #     torch.mean(state_action_values),
                             # )
 
-                        l = loss_fn(state_action_values, expected_state_action_values)
+                        l = loss_fn(
+                            state_action_values,
+                            expected_state_action_values.unsqueeze(1),
+                        )
                         opt.zero_grad()
                         l.backward()
 
@@ -238,7 +273,7 @@ def train_DQN():
                             param.grad.data.clamp_(-1, 1)
                         opt.step()
 
-            if _ > 0 and _ % 10 == 0:
+            if _ > 0 and _ % 15 == 0:
                 target_net.load_state_dict(model.state_dict())
 
     filename = f"Tetris_{episodes_total}.pt"

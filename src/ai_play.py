@@ -45,16 +45,16 @@ def ai_play(model_file):
         # print(pred_q.data.max(1)[1].item())
         select_idx = pred_q.data.max(1)[1].item()
         if select_idx == 0:
-            # key = ord("a")
+            #key = ord("a")
             print("left", pred_q.data)
         elif select_idx == 1:
-            # key = ord("d")
+            #key = ord("d")
             print("right", pred_q.data)
         elif select_idx == 2:
-            # key = ord("w")
+            #key = ord("w")
             print("rotate", pred_q.data)
         elif select_idx == 3:
-            # key = ord("s")
+            #key = ord("s")
             print("down", pred_q.data)
         else:
             raise Exception("Error prediction")
@@ -74,6 +74,8 @@ def ai_play(model_file):
             # down
             game_state, reward, is_end, debug = env.step(Action_Type.Down)
             # print(f"reward [{reward}], is_end [{is_end}]")
+            # print(game_state)
+            # print(debug)
             if debug is not None:
                 debug_img = create_image_from_state(debug)
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
@@ -103,5 +105,5 @@ def ai_play(model_file):
 
 if __name__ == "__main__":
     # human_play()
-    ai_play("outputs/Tetris_1000000 (1).pt")
+    ai_play("outputs/Tetris_8000000.pt")
     sys.exit(0)

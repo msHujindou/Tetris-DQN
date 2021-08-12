@@ -58,5 +58,8 @@ if __name__ == "__main__":
         compute_target="test3",
         environment=env,
     )
-    run = experiment.submit(config)
+
+    run = experiment.submit(
+        config, tags={"1": "从Action_List中删除了Rotate_Down操作", "2": "model的output由4变成了3"}
+    )
     print("Run Scheduled : ", run)
