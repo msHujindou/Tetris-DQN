@@ -231,6 +231,10 @@ def train_DQN():
                             next_state_values * gamma + reward_batch
                         )
 
+                        # print(torch.min(expected_state_action_values))
+                        # m = torch.min(expected_state_action_values)
+                        # print((expected_state_action_values == m).sum())
+
                         # print("state_batch.shape", state_batch.shape)
                         # print("action_batch.shape", action_batch.shape)
                         # print("reward_batch.shape", reward_batch.shape)
