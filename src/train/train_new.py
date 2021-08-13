@@ -38,6 +38,9 @@ Run 112 的结果：
 7x10，仅有田字型俄罗斯方块，double dqn，episode设置成4000000
 把policy_net的更新频率降低后，效果下降
 
+Run 116 结果表明如下会轻微提升model效果
+1, 增加了replay的容量 ; 2, 缩短了policy_net的更新周期
+
 """
 import os
 import datetime
