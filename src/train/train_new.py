@@ -61,12 +61,15 @@ from game.tetris_engine import tetris_engine
 from model.cnn_model import DQN
 import multiprocessing as mp
 
-MAX_Batch_Size = 25600
-Replay_Capacity = MAX_Batch_Size * 8
+Batch_Size = 25600
+Replay_Capacity = Batch_Size * 8
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 Transition = namedtuple("Transition", ("state", "action", "next_state", "reward"))
+
+# set this parameter false, then sample data will be generated only by exploration
+is_exploration_exploitation_enabled = False
 
 
 class ReplayMemory(object):
@@ -97,7 +100,7 @@ episodes_total = 8000000
 episodes_each_process = 100
 
 
-def sample_data(p_episodes, eps, p_net):
+def sample_data(p_episodes, eps, p_net, use_p_net_flag):
     if random.random() < 0.1:
         print(f"@@@@ pid[{os.getpid()}] p_episodes/eps is {p_episodes}/{eps}")
     env = tetris_engine(
@@ -115,7 +118,7 @@ def sample_data(p_episodes, eps, p_net):
         # 每局游戏最多1600多步
         for _ in range(2000):
             explore_exploit_tradeoff = np.random.uniform()
-            if explore_exploit_tradeoff > eps:
+            if use_p_net_flag is True and explore_exploit_tradeoff > eps:
                 with torch.no_grad():
                     action_index = (
                         p_net(
@@ -179,7 +182,13 @@ def train_DQN():
     with mp.Pool(processes=cpu_count) as pool:
         for _ in range(total_iteration):
             task_list = [
-                (episodes_each_process, epsilon, policy_net) for _ in range(cpu_count)
+                (
+                    episodes_each_process,
+                    epsilon,
+                    policy_net,
+                    is_exploration_exploitation_enabled,
+                )
+                for _ in range(cpu_count)
             ]
             res = pool.starmap(sample_data, task_list)
 
@@ -207,12 +216,12 @@ def train_DQN():
                     memory.push(itm[0], itm[1], itm[2], itm[3])
                     if (
                         memory.added_item_count != 0
-                        and memory.added_item_count % MAX_Batch_Size == 0
+                        and memory.added_item_count % Batch_Size == 0
                     ):
-                        BATCH_SIZE = MAX_Batch_Size
-                        if len(memory) < BATCH_SIZE:
-                            BATCH_SIZE = len(memory)
-                        transitions = memory.sample(BATCH_SIZE)
+                        current_batch_size = Batch_Size
+                        if len(memory) < current_batch_size:
+                            current_batch_size = len(memory)
+                        transitions = memory.sample(current_batch_size)
                         batch = Transition(*zip(*transitions))
                         memory.added_item_count = 0
 
@@ -265,7 +274,7 @@ def train_DQN():
                             1, action_batch
                         )
 
-                        next_state_values = torch.zeros(BATCH_SIZE)
+                        next_state_values = torch.zeros(current_batch_size)
                         next_state_values[non_final_mask] = (
                             target_net(non_final_next_states).max(1)[0].detach()
                         )
@@ -286,7 +295,7 @@ def train_DQN():
                         #     expected_state_action_values.unsqueeze(1).shape,
                         # )
 
-                        if random.random() < 0.001:
+                        if random.random() < 0.007:
                             print("#### Current Datetime:", datetime.datetime.now())
                             print(state_action_values)
                             print(expected_state_action_values)
