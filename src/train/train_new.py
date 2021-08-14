@@ -41,6 +41,12 @@ Run 112 的结果：
 Run 116 结果表明如下会轻微提升model效果
 1, 增加了replay的容量 ; 2, 缩短了policy_net的更新周期
 
+Run 121 的结果如下
+将operation_not_allowed_reward以及会导致game_over的action的reward的惩罚值降低至50，model效果提升明显。
+
+Run 121/122/123 的共同结果表明
+double dqn, target_net的更新频率提高的话model效果急剧恶化，更新频率降低的话model效果会提升，至于提升的上限不知道，无限提高会不会造成恶化也不知道
+
 """
 import os
 import datetime

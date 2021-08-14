@@ -11,7 +11,7 @@ from game.tetris_engine import tetris_engine
 
 
 def ai_play(model_file):
-    model = DQN(Confs.row_count.value + 1, Confs.col_count.value, 4)
+    model = DQN(Confs.row_count.value + 1, Confs.col_count.value, 3)
     model.load_state_dict(torch.load(model_file))
     model.eval()
     env = tetris_engine([Block_Type.O])
@@ -42,17 +42,17 @@ def ai_play(model_file):
         # print(pred_q.data.max(1)[1].item())
         select_idx = pred_q.data.max(1)[1].item()
         if select_idx == 0:
-            # key = ord("a")
+            key = ord("a")
             print("left", pred_q.data)
         elif select_idx == 1:
-            # key = ord("d")
+            key = ord("d")
             print("right", pred_q.data)
         elif select_idx == 2:
-            # key = ord("w")
-            print("rotate", pred_q.data)
-        elif select_idx == 3:
-            # key = ord("s")
+            key = ord("s")
             print("down", pred_q.data)
+        elif select_idx == 3:
+            key = ord("w")
+            print("error", pred_q.data)
         else:
             raise Exception("Error prediction")
 
@@ -102,5 +102,5 @@ def ai_play(model_file):
 
 if __name__ == "__main__":
     # human_play()
-    ai_play("outputs/Tetris_8000000.pt")
+    ai_play("outputs/Tetris_8000000 (3).pt")
     sys.exit(0)
