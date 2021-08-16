@@ -77,7 +77,7 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 Transition = namedtuple("Transition", ("state", "action", "next_state", "reward"))
 
 # set this parameter false, then sample data will be generated only by exploration
-is_exploration_exploitation_enabled = False
+is_exploration_exploitation_enabled = True
 
 
 class ReplayMemory(object):
@@ -336,10 +336,13 @@ def train_DQN():
                             param.grad.data.clamp_(-1, 1)
                         opt.step()
 
-            if _ > 0 and _ % 15 == 0:
+            if _ > 0 and _ % 30 == 0:
                 target_net.load_state_dict(policy_net.state_dict())
 
             epsilon = min_eps + (max_eps - min_eps) * np.exp(-decay_rate * _)
+
+    if not os.path.exists("./outputs/"):
+        os.makedirs("./outputs/")
 
     filename = f"Tetris_{episodes_total}.pt"
     torch.save(policy_net.state_dict(), os.path.join("./outputs/", filename))
