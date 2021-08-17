@@ -55,11 +55,15 @@ if __name__ == "__main__":
     config = ScriptRunConfig(
         source_directory=os.path.join(current_path, "../src"),
         script="train/train_new.py",
-        compute_target="test3",
+        compute_target="l8c16m",
         environment=env,
     )
 
     run = experiment.submit(
-        config, tags={"1": "从Action_List中删除了Rotate_Down操作", "2": "model的output由4变成了3"}
+        config,
+        tags={
+            "1": "基于run124",
+            "2": "target_net更新的频率降低至/199",
+        },
     )
     print("Run Scheduled : ", run)

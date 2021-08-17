@@ -6,7 +6,7 @@ from utils.util import create_image_from_state
 
 
 def human_play():
-    env = tetris_engine([Block_Type.O])
+    env = tetris_engine([Block_Type.L])
     game_state = env.reset()
     debug_img = None
     is_end = False
@@ -28,7 +28,7 @@ def human_play():
 
         if key == ord("w"):
             # rotate
-            game_state, reward, is_end, debug = env.step(Action_Type.Rotate_Down)
+            game_state, reward, is_end, debug = env.step(Action_Type.Rotate)
             # print(f"reward [{reward}], is_end [{is_end}]")
             if debug is not None:
                 debug_img = create_image_from_state(debug)
