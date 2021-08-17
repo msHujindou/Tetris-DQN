@@ -54,16 +54,17 @@ if __name__ == "__main__":
     experiment = Experiment(workspace=ws, name="test")
     config = ScriptRunConfig(
         source_directory=os.path.join(current_path, "../src"),
-        script="train/train_new.py",
-        compute_target="l8c16m",
+        script="train/train_q_function2.py",
+        compute_target="h8c16m",
         environment=env,
     )
 
     run = experiment.submit(
         config,
         tags={
-            "1": "基于run124",
-            "2": "target_net更新的频率降低至/199",
+            "1": "训练 q function",
+            "2": "添加了operation_not_allow以及游戏结束的惩罚",
+            "3": "增加了episode次数",
         },
     )
     print("Run Scheduled : ", run)

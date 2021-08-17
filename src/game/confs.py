@@ -13,7 +13,7 @@ class Confs(Enum):
     rotate_no_line_cleared_reward = 0.0
     move_down_no_line_cleared_reward = 0.0
     game_end_punishment = -50.0
-    each_line_reward = 1.0
+    each_line_reward = 100.0
 
 
 class Block_Type(Enum):

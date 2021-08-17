@@ -33,10 +33,10 @@ Run 105 test_1627623453_d10a9e2c 的训练结果如下：
 import datetime
 import numpy as np
 import json
-from game.confs import Block_Type
+from game.confs import Action_Type, Block_Type, Confs
 from game.tetris_engine import tetris_engine
 
-q_table_init_value = -1000.0
+q_table_init_value = 0.0
 
 
 def train_Q_function():
@@ -48,16 +48,24 @@ def train_Q_function():
     epsilon = 1.0
     qtable = {}
 
-    episodes = 3600000
+    episodes = 8000000
 
     conf_last_episode = 0.5
     decay_rate = -np.log((conf_last_episode - min_eps) / (max_eps - min_eps)) / episodes
 
-    print(decay_rate)
+    print("#### Decay rate", decay_rate)
 
-    print("#### Start training,", datetime.datetime.now())
+    print("#### Start training", datetime.datetime.now())
 
-    env = tetris_engine([Block_Type.L])
+    env = tetris_engine(
+        [Block_Type.L],
+        [
+            Action_Type.Left_Down,
+            Action_Type.Right_Down,
+            Action_Type.Rotate,
+            Action_Type.Down,
+        ],
+    )
     last_max_reward = 0
 
     # 运行10局游戏
@@ -85,6 +93,9 @@ def train_Q_function():
 
             if done:
                 # 此局游戏结束
+                if game_state_key not in qtable:
+                    qtable[game_state_key] = [q_table_init_value] * env.action_space
+                qtable[game_state_key][action] = Confs.game_end_punishment.value
                 break
 
             new_state_key = new_state.tobytes().hex()
@@ -104,6 +115,10 @@ def train_Q_function():
                     + gamma * np.amax(qtable[new_state_key])
                     - qtable[game_state_key][action]
                 )
+            else:
+                qtable[game_state_key][
+                    action
+                ] = Confs.operation_not_allowed_reward.value
 
             game_state = new_state
             game_state_key = game_state.tobytes().hex()
