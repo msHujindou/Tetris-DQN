@@ -61,14 +61,14 @@ def ai_play(model_file):
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
         elif key == ord("a"):
             # left
-            game_state, reward, is_end, debug = env.step(Action_Type.Left)
+            game_state, reward, is_end, debug = env.step(Action_Type.Left_Down)
             # print(f"reward [{reward}], is_end [{is_end}]")
             if debug is not None:
                 debug_img = create_image_from_state(debug)
                 debug_img = cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB)
         elif key == ord("d"):
             # right
-            game_state, reward, is_end, debug = env.step(Action_Type.Right)
+            game_state, reward, is_end, debug = env.step(Action_Type.Right_Down)
             # print(f"reward [{reward}], is_end [{is_end}]")
             if debug is not None:
                 debug_img = create_image_from_state(debug)
@@ -85,5 +85,5 @@ def ai_play(model_file):
 
 if __name__ == "__main__":
     # human_play()
-    ai_play("outputs/q_3600000.json")
+    ai_play("outputs/q_8000000.json")
     sys.exit(0)
