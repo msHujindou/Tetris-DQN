@@ -48,9 +48,9 @@ def train_Q_function():
     epsilon = 1.0
     qtable = {}
 
-    episodes = 8000000
+    episodes = 10000000
 
-    conf_last_episode = 0.5
+    conf_last_episode = 0.9
     decay_rate = -np.log((conf_last_episode - min_eps) / (max_eps - min_eps)) / episodes
 
     print("#### Decay rate", decay_rate)
@@ -130,6 +130,8 @@ def train_Q_function():
             last_max_reward = total_reward_each_episode
 
         epsilon = min_eps + (max_eps - min_eps) * np.exp(-decay_rate * episode)
+        if episode % 100000 == 0:
+            print("#### Current epsilon", epsilon)
 
     print("#### End training,", datetime.datetime.now())
     print("#### Total States Count", len(qtable))
