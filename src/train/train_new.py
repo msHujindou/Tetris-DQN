@@ -186,9 +186,8 @@ def train_DQN():
 
     # 如果不设置spawn模式，在Linux环境下同一批次模拟出来的结果，完全一样，
     mp.set_start_method("spawn")
-
-    with mp.Pool(processes=cpu_count) as pool:
-        for _ in range(total_iteration):
+    for _ in range(total_iteration):
+        with mp.Pool(processes=cpu_count) as pool:
             task_list = [
                 (
                     episodes_each_process,
@@ -200,146 +199,143 @@ def train_DQN():
             ]
             res = pool.starmap(sample_data, task_list)
 
-            for itm_lst in res:
-                # there's no need print debug information
-                if _ <= 0:
-                    print("---- state list size", len(itm_lst))
-                #     print("#### size of state list is", len(itm_lst))
-                #     tmpidx = -1
-                #     for tmpitem in itm_lst:
-                #         tmpidx += 1
-                #         if tmpitem[3] > 0:
-                #             print(itm_lst[tmpidx - 1][0])
-                #             print("action :", itm_lst[tmpidx - 1][1])
-                #             print(itm_lst[tmpidx - 1][2])
-                #             print("reward :", itm_lst[tmpidx - 1][3])
-                #             print("----")
-                #             print(tmpitem[0])
-                #             print("action :", tmpitem[1])
-                #             print(tmpitem[2])
-                #             print("reward :", tmpitem[3])
-                #             break
+        for itm_lst in res:
+            # there's no need print debug information
+            if _ <= 0:
+                print("---- state list size", len(itm_lst))
+            #     print("#### size of state list is", len(itm_lst))
+            #     tmpidx = -1
+            #     for tmpitem in itm_lst:
+            #         tmpidx += 1
+            #         if tmpitem[3] > 0:
+            #             print(itm_lst[tmpidx - 1][0])
+            #             print("action :", itm_lst[tmpidx - 1][1])
+            #             print(itm_lst[tmpidx - 1][2])
+            #             print("reward :", itm_lst[tmpidx - 1][3])
+            #             print("----")
+            #             print(tmpitem[0])
+            #             print("action :", tmpitem[1])
+            #             print(tmpitem[2])
+            #             print("reward :", tmpitem[3])
+            #             break
 
-                for itm in itm_lst:
-                    memory.push(itm[0], itm[1], itm[2], itm[3])
-                    if (
-                        memory.added_item_count != 0
-                        and memory.added_item_count % Batch_Size == 0
-                    ):
-                        current_batch_size = Batch_Size
-                        if len(memory) < current_batch_size:
-                            current_batch_size = len(memory)
-                        transitions = memory.sample(current_batch_size)
-                        batch = Transition(*zip(*transitions))
-                        memory.added_item_count = 0
+            for itm in itm_lst:
+                memory.push(itm[0], itm[1], itm[2], itm[3])
+                if (
+                    memory.added_item_count != 0
+                    and memory.added_item_count % Batch_Size == 0
+                ):
+                    current_batch_size = Batch_Size
+                    if len(memory) < current_batch_size:
+                        current_batch_size = len(memory)
+                    transitions = memory.sample(current_batch_size)
+                    batch = Transition(*zip(*transitions))
+                    memory.added_item_count = 0
 
-                        non_final_mask = torch.tensor(
-                            tuple(map(lambda s: s is not None, batch.next_state)),
-                            dtype=torch.bool,
-                        )
-                        non_final_next_states = torch.cat(
-                            [
-                                torch.from_numpy(s).unsqueeze(0).unsqueeze(0).float()
-                                for s in batch.next_state
-                                if s is not None
-                            ]
-                        )
+                    non_final_mask = torch.tensor(
+                        tuple(map(lambda s: s is not None, batch.next_state)),
+                        dtype=torch.bool,
+                    )
+                    non_final_next_states = torch.cat(
+                        [
+                            torch.from_numpy(s).unsqueeze(0).unsqueeze(0).float()
+                            for s in batch.next_state
+                            if s is not None
+                        ]
+                    )
 
-                        # print(non_final_mask)
-                        # print(non_final_mask.size())
-                        # print((non_final_mask == True).sum())
-                        # print((non_final_mask == False).sum())
+                    # print(non_final_mask)
+                    # print(non_final_mask.size())
+                    # print((non_final_mask == True).sum())
+                    # print((non_final_mask == False).sum())
 
-                        # below comment come from pytorch DQN example
-                        # state_batch.shape torch.Size([128, 3, 40, 90])
-                        # action_batch.shape torch.Size([128, 1])
-                        # reward_batch.shape torch.Size([128])
-                        # state_action_values.shape torch.Size([128, 1])
-                        # expected_state_action_values.unsqueeze(1).shape torch.Size([128, 1])
+                    # below comment come from pytorch DQN example
+                    # state_batch.shape torch.Size([128, 3, 40, 90])
+                    # action_batch.shape torch.Size([128, 1])
+                    # reward_batch.shape torch.Size([128])
+                    # state_action_values.shape torch.Size([128, 1])
+                    # expected_state_action_values.unsqueeze(1).shape torch.Size([128, 1])
 
-                        state_batch = torch.cat(
-                            [
-                                torch.from_numpy(s).unsqueeze(0).unsqueeze(0).float()
-                                for s in batch.state
-                            ]
-                        )
+                    state_batch = torch.cat(
+                        [
+                            torch.from_numpy(s).unsqueeze(0).unsqueeze(0).float()
+                            for s in batch.state
+                        ]
+                    )
 
-                        action_batch = torch.cat(
-                            [
-                                torch.tensor([[act]], dtype=torch.long)
-                                for act in batch.action
-                            ]
-                        )
+                    action_batch = torch.cat(
+                        [
+                            torch.tensor([[act]], dtype=torch.long)
+                            for act in batch.action
+                        ]
+                    )
 
-                        reward_batch = torch.cat(
-                            [
-                                torch.tensor([rwd], dtype=torch.float)
-                                for rwd in batch.reward
-                            ]
-                        )
+                    reward_batch = torch.cat(
+                        [torch.tensor([rwd], dtype=torch.float) for rwd in batch.reward]
+                    )
 
-                        state_action_values = policy_net(state_batch).gather(
-                            1, action_batch
-                        )
+                    state_action_values = policy_net(state_batch).gather(
+                        1, action_batch
+                    )
 
-                        next_state_values = torch.zeros(current_batch_size)
-                        next_state_values[non_final_mask] = (
-                            target_net(non_final_next_states).max(1)[0].detach()
-                        )
-                        expected_state_action_values = (
-                            next_state_values * gamma + reward_batch
-                        )
+                    next_state_values = torch.zeros(current_batch_size)
+                    next_state_values[non_final_mask] = (
+                        target_net(non_final_next_states).max(1)[0].detach()
+                    )
+                    expected_state_action_values = (
+                        next_state_values * gamma + reward_batch
+                    )
 
-                        # print(torch.min(expected_state_action_values))
-                        # m = torch.min(expected_state_action_values)
-                        # print((expected_state_action_values == m).sum())
+                    # print(torch.min(expected_state_action_values))
+                    # m = torch.min(expected_state_action_values)
+                    # print((expected_state_action_values == m).sum())
 
-                        # print("state_batch.shape", state_batch.shape)
-                        # print("action_batch.shape", action_batch.shape)
-                        # print("reward_batch.shape", reward_batch.shape)
-                        # print("state_action_values.shape", state_action_values.shape)
+                    # print("state_batch.shape", state_batch.shape)
+                    # print("action_batch.shape", action_batch.shape)
+                    # print("reward_batch.shape", reward_batch.shape)
+                    # print("state_action_values.shape", state_action_values.shape)
+                    # print(
+                    #     "expected_state_action_values.unsqueeze(1).shape",
+                    #     expected_state_action_values.unsqueeze(1).shape,
+                    # )
+
+                    if random.random() < 0.007:
+                        print("#### Current Datetime:", datetime.datetime.now())
+                        print(state_action_values)
+                        print(expected_state_action_values)
                         # print(
-                        #     "expected_state_action_values.unsqueeze(1).shape",
-                        #     expected_state_action_values.unsqueeze(1).shape,
+                        #     "expect : max value ",
+                        #     torch.max(expected_state_action_values),
+                        # )
+                        # print(
+                        #     "expect : avg value ",
+                        #     torch.mean(expected_state_action_values),
+                        # )
+                        # print(
+                        #     "predict : max value ",
+                        #     torch.max(state_action_values),
+                        # )
+                        # print(
+                        #     "predict : avg value ",
+                        #     torch.mean(state_action_values),
                         # )
 
-                        if random.random() < 0.007:
-                            print("#### Current Datetime:", datetime.datetime.now())
-                            print(state_action_values)
-                            print(expected_state_action_values)
-                            # print(
-                            #     "expect : max value ",
-                            #     torch.max(expected_state_action_values),
-                            # )
-                            # print(
-                            #     "expect : avg value ",
-                            #     torch.mean(expected_state_action_values),
-                            # )
-                            # print(
-                            #     "predict : max value ",
-                            #     torch.max(state_action_values),
-                            # )
-                            # print(
-                            #     "predict : avg value ",
-                            #     torch.mean(state_action_values),
-                            # )
+                    l = loss_fn(
+                        state_action_values,
+                        expected_state_action_values.unsqueeze(1),
+                    )
+                    opt.zero_grad()
+                    l.backward()
 
-                        l = loss_fn(
-                            state_action_values,
-                            expected_state_action_values.unsqueeze(1),
-                        )
-                        opt.zero_grad()
-                        l.backward()
+                    # pytorch 的实例代码里有这么一段
+                    for param in policy_net.parameters():
+                        param.grad.data.clamp_(-1, 1)
+                    opt.step()
 
-                        # pytorch 的实例代码里有这么一段
-                        for param in policy_net.parameters():
-                            param.grad.data.clamp_(-1, 1)
-                        opt.step()
+        if _ > 0 and _ % 30 == 0:
+            target_net.load_state_dict(policy_net.state_dict())
 
-            if _ > 0 and _ % 30 == 0:
-                target_net.load_state_dict(policy_net.state_dict())
-
-            epsilon = min_eps + (max_eps - min_eps) * np.exp(-decay_rate * _)
+        epsilon = min_eps + (max_eps - min_eps) * np.exp(-decay_rate * _)
 
     if not os.path.exists("./outputs/"):
         os.makedirs("./outputs/")
