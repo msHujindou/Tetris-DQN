@@ -60,6 +60,12 @@ import torch.nn.functional as F
 import torchvision.transforms as T
 
 
+def et():
+    import sys
+
+    sys.exit(0)
+
+
 env = gym.make("CartPole-v0").unwrapped
 
 # set up matplotlib
@@ -229,6 +235,12 @@ class DQN(nn.Module):
 resize = T.Compose(
     [T.ToPILImage(), T.Resize(40, interpolation=Image.CUBIC), T.ToTensor()]
 )
+# print(resize)
+# Compose(
+#     ToPILImage()
+#     Resize(size=40, interpolation=bicubic)
+#     ToTensor()
+# )
 
 
 def get_cart_location(screen_width):
@@ -270,6 +282,20 @@ plt.imshow(get_screen().cpu().squeeze(0).permute(1, 2, 0).numpy(), interpolation
 plt.title("Example extracted screen")
 plt.show()
 
+# while True:
+#     ipt = input("")
+#     if ipt == "a":
+#         _, reward, done, _ = env.step(0)
+#     if ipt == "d":
+#         _, reward, done, _ = env.step(1)
+#     print(reward, done)
+#     plt.imshow(
+#         get_screen().cpu().squeeze(0).permute(1, 2, 0).numpy(), interpolation="none"
+#     )
+#     plt.title("Example extracted screen")
+#     plt.show()
+#     if ipt == "q":
+#         et()
 
 ######################################################################
 # Training
@@ -329,12 +355,14 @@ def select_action(state):
     )
     steps_done += 1
     if sample > eps_threshold:
+        # print("#### Model selection")
         with torch.no_grad():
             # t.max(1) will return largest column value of each row.
             # second column on max result is index of where max element was
             # found, so we pick action with the larger expected reward.
             return policy_net(state).max(1)[1].view(1, 1)
     else:
+        # print("#### Random selection")
         return torch.tensor(
             [[random.randrange(n_actions)]], device=device, dtype=torch.long
         )
@@ -403,10 +431,15 @@ def optimize_model():
     action_batch = torch.cat(batch.action)
     reward_batch = torch.cat(batch.reward)
 
+    if torch.sum(reward_batch) != BATCH_SIZE:
+        print(reward_batch)
+        print(torch.sum(reward_batch))
+
     # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
     # columns of actions taken. These are the actions which would've been taken
     # for each batch state according to policy_net
     state_action_values = policy_net(state_batch).gather(1, action_batch)
+    # print(state_action_values)
 
     # Compute V(s_{t+1}) for all next states.
     # Expected values of actions for non_final_next_states are computed based
@@ -445,13 +478,18 @@ def optimize_model():
 # duration improvements.
 #
 
-num_episodes = 50
+num_episodes = 500
 for i_episode in range(num_episodes):
     # Initialize the environment and state
     env.reset()
     last_screen = get_screen()
     current_screen = get_screen()
+    # print(last_screen.shape)
+    # print(current_screen.shape)
+
     state = current_screen - last_screen
+    # print(state.shape, torch.sum(state))
+
     for t in count():
         # Select and perform an action
         action = select_action(state)
@@ -463,8 +501,14 @@ for i_episode in range(num_episodes):
         current_screen = get_screen()
         if not done:
             next_state = current_screen - last_screen
+            # print(torch.sum(state), action.item(), reward, torch.sum(next_state))
+            # print(state.shape, torch.sum(state))
+            # if t > 3:
+            #     et()
         else:
+            # print(torch.sum(state), action.item(), reward)
             next_state = None
+            # et()
 
         # Store the transition in memory
         memory.push(state, action, next_state, reward)
