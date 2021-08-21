@@ -55,7 +55,7 @@ if __name__ == "__main__":
     config = ScriptRunConfig(
         source_directory=os.path.join(current_path, "../src"),
         script="train/train_q_function2.py",
-        compute_target="h8c16m",
+        compute_target="l8c16m",
         environment=env,
     )
 
@@ -63,8 +63,8 @@ if __name__ == "__main__":
         config,
         tags={
             "1": "训练 q function",
-            "2": "添加了operation_not_allow以及游戏结束的惩罚",
-            "3": "增加了episode次数",
+            "2": "epsilon_last_episode 为 0.75",
+            "3": "用proc_when_block_dead2计算reward",
         },
     )
     print("Run Scheduled : ", run)

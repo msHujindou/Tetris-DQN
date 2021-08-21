@@ -50,7 +50,7 @@ def train_Q_function():
 
     episodes = 10000000
 
-    epsilon_last_episode = 0.5
+    epsilon_last_episode = 0.75
     decay_rate = (
         -np.log((epsilon_last_episode - min_eps) / (max_eps - min_eps)) / episodes
     )
@@ -68,7 +68,7 @@ def train_Q_function():
             Action_Type.Down,
         ],
     )
-    last_max_reward = 0
+    last_max_reward = -1000000
 
     # 运行10局游戏
     for episode in range(episodes):

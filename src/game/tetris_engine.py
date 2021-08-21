@@ -517,7 +517,7 @@ class tetris_engine:
         elif action == Action_Type.Down:
             is_dead, new_game_state = self.tetromino_block.move_down(self.board_state)
             if is_dead:
-                is_end, reward, game_state, debug = self.proc_when_block_dead(
+                is_end, reward, game_state, debug = self.proc_when_block_dead2(
                     self.board_state
                 )
                 return (
@@ -545,7 +545,7 @@ class tetris_engine:
                         reward,
                         game_state,
                         debug,
-                    ) = self.proc_when_block_dead(self.board_state)
+                    ) = self.proc_when_block_dead2(self.board_state)
                     return (
                         game_state,
                         reward,
@@ -576,7 +576,7 @@ class tetris_engine:
                         reward,
                         game_state,
                         debug,
-                    ) = self.proc_when_block_dead(self.board_state)
+                    ) = self.proc_when_block_dead2(self.board_state)
                     return (
                         game_state,
                         reward,
@@ -616,7 +616,7 @@ class tetris_engine:
                         reward,
                         game_state,
                         debug,
-                    ) = self.proc_when_block_dead(self.board_state)
+                    ) = self.proc_when_block_dead2(self.board_state)
                     return (
                         game_state,
                         reward,
