@@ -114,7 +114,7 @@ class tetris_engine:
                 print(cp_dst)
             return (
                 game_stop_flag,
-                clear_line_count,
+                clear_line_count * Confs.each_line_reward.value,
                 cp_dst,
                 cp_dst,
             )
@@ -130,7 +130,7 @@ class tetris_engine:
             # print("游戏结束，因为没有空间容纳新的俄罗斯方块")
             return (
                 game_stop_flag,
-                clear_line_count,
+                clear_line_count * Confs.each_line_reward.value,
                 cp_dst,
                 tmp_game_state,
             )
@@ -140,7 +140,7 @@ class tetris_engine:
 
         return (
             game_stop_flag,
-            clear_line_count,
+            clear_line_count * Confs.each_line_reward.value,
             tmp_game_state,
             None,
         )
@@ -517,12 +517,12 @@ class tetris_engine:
         elif action == Action_Type.Down:
             is_dead, new_game_state = self.tetromino_block.move_down(self.board_state)
             if is_dead:
-                is_end, cleared_lines, game_state, debug = self.proc_when_block_dead(
+                is_end, reward, game_state, debug = self.proc_when_block_dead(
                     self.board_state
                 )
                 return (
                     game_state,
-                    cleared_lines * Confs.each_line_reward.value,
+                    reward,
                     is_end,
                     debug,
                 )
@@ -542,13 +542,13 @@ class tetris_engine:
                 if is_dead:
                     (
                         is_end,
-                        cleared_lines,
+                        reward,
                         game_state,
                         debug,
-                    ) = self.proc_when_block_dead2(self.board_state)
+                    ) = self.proc_when_block_dead(self.board_state)
                     return (
                         game_state,
-                        cleared_lines * Confs.each_line_reward.value,
+                        reward,
                         is_end,
                         debug,
                     )
@@ -573,13 +573,13 @@ class tetris_engine:
                 if is_dead:
                     (
                         is_end,
-                        cleared_lines,
+                        reward,
                         game_state,
                         debug,
                     ) = self.proc_when_block_dead(self.board_state)
                     return (
                         game_state,
-                        cleared_lines * Confs.each_line_reward.value,
+                        reward,
                         is_end,
                         debug,
                     )
@@ -613,13 +613,13 @@ class tetris_engine:
                 if is_dead:
                     (
                         is_end,
-                        cleared_lines,
+                        reward,
                         game_state,
                         debug,
                     ) = self.proc_when_block_dead(self.board_state)
                     return (
                         game_state,
-                        cleared_lines * Confs.each_line_reward.value,
+                        reward,
                         is_end,
                         debug,
                     )
@@ -651,13 +651,13 @@ class tetris_engine:
                 if is_dead:
                     (
                         is_end,
-                        cleared_lines,
+                        reward,
                         game_state,
                         debug,
                     ) = self.proc_when_block_dead2(self.board_state)
                     return (
                         game_state,
-                        cleared_lines * Confs.each_line_reward.value,
+                        reward,
                         is_end,
                         debug,
                     )
@@ -676,14 +676,3 @@ class tetris_engine:
                     imaginary_game_state,
                 )
         raise Exception(f"no implementation for action [{action}]")
-
-
-# arr = np.array([[2, 0, 1], [3, 0, 0], [4, 1, 0]])
-# print(arr)
-# print(arr[:, 0], arr[:, 0][1:3])
-# print(arr[:, 1])
-# print(arr[:, 2])
-# print(np.argmax(arr[:, 0] == 1), np.argmax(arr[:, 1] == 1), np.argmax(arr[:, 2] == 1))
-# print("")
-# print(list(range(1, 3)))
-# print(np.absolute(-1.3))

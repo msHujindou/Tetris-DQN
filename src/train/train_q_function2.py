@@ -50,8 +50,10 @@ def train_Q_function():
 
     episodes = 10000000
 
-    conf_last_episode = 0.9
-    decay_rate = -np.log((conf_last_episode - min_eps) / (max_eps - min_eps)) / episodes
+    epsilon_last_episode = 0.5
+    decay_rate = (
+        -np.log((epsilon_last_episode - min_eps) / (max_eps - min_eps)) / episodes
+    )
 
     print("#### Decay rate", decay_rate)
 
