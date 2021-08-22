@@ -69,6 +69,8 @@ from game.tetris_engine import tetris_engine
 from model.cnn_model import DQN
 import multiprocessing as mp
 
+import gc
+
 Batch_Size = 25600
 Replay_Capacity = Batch_Size * 8
 
@@ -187,17 +189,33 @@ def train_DQN():
     # 如果不设置spawn模式，在Linux环境下同一批次模拟出来的结果，完全一样，
     mp.set_start_method("spawn")
     for _ in range(total_iteration):
-        with mp.Pool(processes=cpu_count) as pool:
-            task_list = [
-                (
-                    episodes_each_process,
-                    epsilon,
-                    policy_net,
-                    is_exploration_exploitation_enabled,
-                )
-                for _ in range(cpu_count)
-            ]
-            res = pool.starmap(sample_data, task_list)
+        res = None
+        # with mp.Pool(processes=cpu_count) as pool:
+        #     task_list = [
+        #         (
+        #             episodes_each_process,
+        #             epsilon,
+        #             policy_net,
+        #             is_exploration_exploitation_enabled,
+        #         )
+        #         for _ in range(cpu_count)
+        #     ]
+        #     res = pool.starmap(sample_data, task_list)
+        pool = mp.Pool(processes=cpu_count)
+        task_list = [
+            (
+                episodes_each_process,
+                epsilon,
+                policy_net,
+                is_exploration_exploitation_enabled,
+            )
+            for _ in range(cpu_count)
+        ]
+        res = pool.starmap(sample_data, task_list)
+        pool.close()
+        pool.join()
+        if _ % 5 == 4:
+            gc.collect()
 
         for itm_lst in res:
             # there's no need print debug information
