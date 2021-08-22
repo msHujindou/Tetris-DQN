@@ -36,14 +36,12 @@ def ai_play(model_file):
             print("Game State not Found")
             # continue
         else:
-            print(model[game_state_key])
-            if np.max(model[game_state_key]) > 0:
+            if np.max(model[game_state_key]) != np.min(model[game_state_key]):
                 action = np.argmax(model[game_state_key])
                 action_name = env.action_type_list[action]
                 print(action, action_name, model[game_state_key])
             else:
-                pass
-                # print("Q value not set for this state, or state is dead .")
+                print(model[game_state_key])
 
         if key == ord("w"):
             # rotate
@@ -85,5 +83,5 @@ def ai_play(model_file):
 
 if __name__ == "__main__":
     # human_play()
-    ai_play("outputs/q_8000000.json")
+    ai_play("outputs/q_10000000_143.json")
     sys.exit(0)
